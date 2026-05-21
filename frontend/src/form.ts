@@ -2,7 +2,7 @@
 import { API_BASE } from './config.js';
 import { formContainer } from './dom.js';
 import { getFieldElementId, renderFormField } from './field-renderers.js';
-import { commonText, t } from './i18n.js';
+import { commonText, t } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 
 export function getPkFields(tableKey: TableKey): string[] {

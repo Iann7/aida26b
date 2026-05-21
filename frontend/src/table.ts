@@ -1,6 +1,6 @@
 // Table renderer: draws records and delegates edit/delete button behavior to callbacks.
 import { sharedTable } from './dom.js';
-import { commonText, t } from './i18n.js';
+import { commonText, t } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 
 type TableActions<K extends TableKey> = {

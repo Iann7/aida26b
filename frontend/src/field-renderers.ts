@@ -1,5 +1,5 @@
 // Field rendering helpers: convert schema column definitions into form controls.
-import { t } from './i18n.js';
+import { t } from './internationalization.js';
 import type { ColumnDef } from './types.js';
 import type { TableKey, TableRecordMap } from './schema.js';
 

@@ -2,7 +2,7 @@
 import { API_BASE } from './config.js';
 import { addRecordBtn, navContainer, viewTitle } from './dom.js';
 import { getRecordPath, hideAnyForm, showAnyForm } from './form.js';
-import { commonText, getLanguage, setLanguage, t } from './i18n.js';
+import { commonText, getLanguage, setLanguage, t } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 import { renderAnyTable } from './table.js';
 import type { Language } from './types.js';
