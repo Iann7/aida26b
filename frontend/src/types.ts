@@ -7,12 +7,14 @@ export type TypeMap = {
 };
 
 export type MyTypeNames = keyof TypeMap;
+export type Language = 'es' | 'en';
+export type LocalizedText = Record<Language, string>;
 
 export type ColumnDef = {
   type: MyTypeNames;
-  label?: string;
+  label?: LocalizedText;
   input?: 'text' | 'email' | 'date' | 'number' | 'textarea' | 'select';
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: string; label: LocalizedText }>;
   required?: boolean;
   editable?: boolean;
   readonlyOnEdit?: boolean;
@@ -22,9 +24,9 @@ export type ColumnDef = {
 export type TableStructure = {
   columns: Record<string, ColumnDef>;
   pk: string | string[];
-  uiName: string;
-  title?: string;
-  addButtonLabel?: string;
+  uiName: LocalizedText;
+  title?: LocalizedText;
+  addButtonLabel?: LocalizedText;
 };
 
 export type InferType<FieldDefs extends Record<string, ColumnDef>> = {

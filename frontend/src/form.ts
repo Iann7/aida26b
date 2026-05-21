@@ -2,6 +2,7 @@
 import { API_BASE } from './config.js';
 import { formContainer } from './dom.js';
 import { getFieldElementId, renderFormField } from './field-renderers.js';
+import { commonText, t } from './i18n.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 
 export function getPkFields(tableKey: TableKey): string[] {
@@ -65,7 +66,7 @@ export async function showAnyForm<K extends TableKey>(
   form.id = formId;
 
   const h3 = document.createElement('h3');
-  h3.textContent = isEdit ? `Editar ${tableConfig.uiName} / Edit ${tableConfig.uiName}` : `Agregar ${tableConfig.uiName} / Add ${tableConfig.uiName}`;
+  h3.textContent = `${isEdit ? t(commonText.edit) : t(commonText.add)} ${t(tableConfig.uiName)}`;
   form.appendChild(h3);
   fields.forEach((field) => form.appendChild(field));
 
@@ -74,19 +75,19 @@ export async function showAnyForm<K extends TableKey>(
 
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
-  submitBtn.textContent = isEdit ? 'Actualizar / Update' : 'Agregar / Add';
+  submitBtn.textContent = isEdit ? t(commonText.update) : t(commonText.add);
 
   const cancelBtn = document.createElement('button');
   cancelBtn.type = 'button';
   cancelBtn.className = 'cancel-btn';
-  cancelBtn.textContent = 'Cancelar / Cancel';
+  cancelBtn.textContent = t(commonText.cancel);
   cancelBtn.addEventListener('click', hideAnyForm);
 
   actionsDiv.appendChild(submitBtn);
   actionsDiv.appendChild(cancelBtn);
   form.appendChild(actionsDiv);
   formContainer.appendChild(form);
-  formContainer.style.display = 'block';
+  formContainer.style.display = 'flex';
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -107,7 +108,7 @@ export async function showAnyForm<K extends TableKey>(
       hideAnyForm();
       onSaved(tableKey);
     } catch (error) {
-      console.error(`Error saving ${tableConfig.uiName.toLowerCase()}:`, error);
+      console.error(`Error saving ${t(tableConfig.uiName).toLowerCase()}:`, error);
     }
   });
 }

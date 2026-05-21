@@ -1,4 +1,5 @@
 // Field rendering helpers: convert schema column definitions into form controls.
+import { t } from './i18n.js';
 import type { ColumnDef } from './types.js';
 import type { TableKey, TableRecordMap } from './schema.js';
 
@@ -36,7 +37,7 @@ const renderers: Record<'input' | 'textarea' | 'select', RendererFunc> = {
     (column.options || []).forEach((opt) => {
       const o = document.createElement('option');
       o.value = opt.value;
-      o.textContent = opt.label;
+      o.textContent = t(opt.label);
       if (String(record?.[fieldName] ?? '') === opt.value) o.selected = true;
       sel.appendChild(o);
     });
@@ -74,7 +75,7 @@ export function renderFormField<K extends TableKey>(
 
   const labelEl = document.createElement('label');
   labelEl.htmlFor = id;
-  labelEl.textContent = column.label ?? '';
+  labelEl.textContent = t(column.label);
   wrapper.appendChild(labelEl);
 
   const renderer = getRenderer<K>(mapInputToRenderer(column.input));

@@ -2,18 +2,20 @@
 import { API_BASE } from './config.js';
 import { addRecordBtn, navContainer, viewTitle } from './dom.js';
 import { getRecordPath, hideAnyForm, showAnyForm } from './form.js';
+import { commonText, getLanguage, setLanguage, t } from './i18n.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 import { renderAnyTable } from './table.js';
+import type { Language } from './types.js';
 
 const tableKeys = Object.keys(structure.tables) as TableKey[];
 const tableNavButtons = {} as Record<TableKey, HTMLButtonElement>;
+const appTitle = document.getElementById('app-title');
+const languageSelect = document.getElementById('language-select') as HTMLSelectElement | null;
 let activeTableKey: TableKey = tableKeys[0];
 
 for (const key of tableKeys) {
-  const cfg = structure.tables[key];
   const btn = document.createElement('button');
   btn.id = `${key}-btn`;
-  btn.textContent = cfg.title ?? cfg.uiName;
   navContainer.appendChild(btn);
   tableNavButtons[key] = btn;
   btn.addEventListener('click', () => showSection(key));
@@ -24,11 +26,16 @@ function showSection(section: TableKey): void {
 
   Object.entries(tableNavButtons).forEach(([key, button]) => {
     button.classList.toggle('active', key === section);
+    const tableConfig = structure.tables[key as TableKey];
+    button.textContent = t(tableConfig.title ?? tableConfig.uiName);
   });
 
   const tableConfig = structure.tables[section];
-  viewTitle.textContent = tableConfig.title ?? tableConfig.uiName;
-  addRecordBtn.textContent = tableConfig.addButtonLabel || `Agregar ${tableConfig.uiName} / Add ${tableConfig.uiName}`;
+  const translatedAppTitle = t(commonText.appTitle);
+  document.title = translatedAppTitle;
+  if (appTitle) appTitle.textContent = translatedAppTitle;
+  viewTitle.textContent = t(tableConfig.title ?? tableConfig.uiName);
+  addRecordBtn.textContent = t(tableConfig.addButtonLabel) || `${t(commonText.add)} ${t(tableConfig.uiName)}`;
   hideAnyForm();
   loadTableData(section);
 }
@@ -58,8 +65,11 @@ async function editRecord<K extends TableKey>(tableKey: K, pkValues: string[]): 
 
 async function deleteRecord<K extends TableKey>(tableKey: K, pkValues: string[]): Promise<void> {
   const tableConfig = structure.tables[tableKey];
+  const tableName = t(tableConfig.uiName).toLowerCase();
   const confirmed = confirm(
-    `¿Está seguro de que desea eliminar este ${tableConfig.uiName.toLowerCase()}? / Are you sure you want to delete this ${tableConfig.uiName.toLowerCase()}?`,
+    getLanguage() === 'es'
+      ? `¿Está seguro de que desea eliminar este ${tableName}?`
+      : `Are you sure you want to delete this ${tableName}?`,
   );
 
   if (!confirmed) return;
@@ -74,6 +84,16 @@ async function deleteRecord<K extends TableKey>(tableKey: K, pkValues: string[])
 
 addRecordBtn.addEventListener('click', () => {
   showAnyForm(activeTableKey, { onSaved: loadTableData });
+});
+
+if (languageSelect) {
+  languageSelect.value = getLanguage();
+}
+
+languageSelect?.addEventListener('change', (event) => {
+  const select = event.currentTarget as HTMLSelectElement;
+  setLanguage(select.value as Language);
+  showSection(activeTableKey);
 });
 
 showSection(activeTableKey);

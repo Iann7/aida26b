@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión Académica - Faculty of Exact Sciences</title>
+    <title>Sistema de Gestión Académica</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,6 +27,14 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+        }
+        .language-control {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+        .language-control select {
+            width: auto;
         }
         .nav button {
             margin: 0 10px;
@@ -109,11 +117,34 @@
             background-color: #6c757d;
             color: white;
         }
+        #record-form {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1000;
+        }
+
+        #record-form form {
+            width: min(520px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            background-color: white;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sistema de Gestión Académica / Academic Management System</h1>
+        <h1 id="app-title"></h1>
+        <div class="language-control">
+            <select id="language-select" aria-label="Language">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+            </select>
+        </div>
         
         <nav id="table-nav" class="nav"></nav>
 
