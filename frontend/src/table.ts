@@ -1,6 +1,6 @@
 // Table renderer: draws records and delegates edit/delete button behavior to callbacks.
 import { sharedTable } from './dom.js';
-import { commonText, t } from './internationalization.js';
+import { commonText, getLocalizedText } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 
 type TableActions<K extends TableKey> = {
@@ -22,12 +22,12 @@ export function renderAnyTable<K extends TableKey>(
   const headerRow = document.createElement('tr');
   Object.values(tableStructure.columns).forEach((column) => {
     const th = document.createElement('th');
-    th.textContent = t(column.label);
+    th.textContent = getLocalizedText(column.label);
     headerRow.appendChild(th);
   });
 
   const actionsHeader = document.createElement('th');
-  actionsHeader.textContent = t(commonText.actions);
+  actionsHeader.textContent = getLocalizedText(commonText.actions);
   headerRow.appendChild(actionsHeader);
   thead.appendChild(headerRow);
 
@@ -48,12 +48,12 @@ export function renderAnyTable<K extends TableKey>(
 
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-btn';
-    editBtn.textContent = t(commonText.edit);
+    editBtn.textContent = getLocalizedText(commonText.edit);
     editBtn.addEventListener('click', () => actions.onEdit(tableKey, pkValues));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-btn';
-    deleteBtn.textContent = t(commonText.delete);
+    deleteBtn.textContent = getLocalizedText(commonText.delete);
     deleteBtn.addEventListener('click', () => actions.onDelete(tableKey, pkValues));
 
     actionsTd.appendChild(editBtn);

@@ -2,7 +2,7 @@
 import { API_BASE } from './config.js';
 import { formContainer } from './dom.js';
 import { getFieldElementId, renderFormField } from './field-renderers.js';
-import { commonText, t } from './internationalization.js';
+import { commonText, getLocalizedText } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 
 export function getPkFields(tableKey: TableKey): string[] {
@@ -66,7 +66,7 @@ export async function showAnyForm<K extends TableKey>(
   form.id = formId;
 
   const h3 = document.createElement('h3');
-  h3.textContent = `${isEdit ? t(commonText.edit) : t(commonText.add)} ${t(tableConfig.uiName)}`;
+  h3.textContent = `${isEdit ? getLocalizedText(commonText.edit) : getLocalizedText(commonText.add)} ${getLocalizedText(tableConfig.uiName)}`;
   form.appendChild(h3);
   fields.forEach((field) => form.appendChild(field));
 
@@ -75,12 +75,12 @@ export async function showAnyForm<K extends TableKey>(
 
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
-  submitBtn.textContent = isEdit ? t(commonText.update) : t(commonText.add);
+  submitBtn.textContent = isEdit ? getLocalizedText(commonText.update) : getLocalizedText(commonText.add);
 
   const cancelBtn = document.createElement('button');
   cancelBtn.type = 'button';
   cancelBtn.className = 'cancel-btn';
-  cancelBtn.textContent = t(commonText.cancel);
+  cancelBtn.textContent = getLocalizedText(commonText.cancel);
   cancelBtn.addEventListener('click', hideAnyForm);
 
   actionsDiv.appendChild(submitBtn);
@@ -108,7 +108,7 @@ export async function showAnyForm<K extends TableKey>(
       hideAnyForm();
       onSaved(tableKey);
     } catch (error) {
-      console.error(`Error saving ${t(tableConfig.uiName).toLowerCase()}:`, error);
+      console.error(`Error saving ${getLocalizedText(tableConfig.uiName).toLowerCase()}:`, error);
     }
   });
 }

@@ -26,6 +26,6 @@ export function setLanguage(language: Language): void {
   localStorage.setItem('language', language);
 }
 
-export function t(text?: LocalizedText): string {
+export function getLocalizedText(text?: LocalizedText): string {
   return text?.[currentLanguage] ?? '';
 }

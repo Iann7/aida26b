@@ -2,7 +2,7 @@
 import { API_BASE } from './config.js';
 import { addRecordBtn, navContainer, viewTitle } from './dom.js';
 import { getRecordPath, hideAnyForm, showAnyForm } from './form.js';
-import { commonText, getLanguage, setLanguage, t } from './internationalization.js';
+import { commonText, getLanguage, setLanguage, getLocalizedText } from './internationalization.js';
 import { structure, type TableKey, type TableRecordMap } from './schema.js';
 import { renderAnyTable } from './table.js';
 import type { Language } from './types.js';
@@ -27,15 +27,15 @@ function showSection(section: TableKey): void {
   Object.entries(tableNavButtons).forEach(([key, button]) => {
     button.classList.toggle('active', key === section);
     const tableConfig = structure.tables[key as TableKey];
-    button.textContent = t(tableConfig.title ?? tableConfig.uiName);
+    button.textContent = getLocalizedText(tableConfig.title ?? tableConfig.uiName);
   });
 
   const tableConfig = structure.tables[section];
-  const translatedAppTitle = t(commonText.appTitle);
+  const translatedAppTitle = getLocalizedText(commonText.appTitle);
   document.title = translatedAppTitle;
   if (appTitle) appTitle.textContent = translatedAppTitle;
-  viewTitle.textContent = t(tableConfig.title ?? tableConfig.uiName);
-  addRecordBtn.textContent = t(tableConfig.addButtonLabel) || `${t(commonText.add)} ${t(tableConfig.uiName)}`;
+  viewTitle.textContent = getLocalizedText(tableConfig.title ?? tableConfig.uiName);
+  addRecordBtn.textContent = getLocalizedText(tableConfig.addButtonLabel) || `${getLocalizedText(commonText.add)} ${getLocalizedText(tableConfig.uiName)}`;
   hideAnyForm();
   loadTableData(section);
 }
@@ -65,7 +65,7 @@ async function editRecord<K extends TableKey>(tableKey: K, pkValues: string[]): 
 
 async function deleteRecord<K extends TableKey>(tableKey: K, pkValues: string[]): Promise<void> {
   const tableConfig = structure.tables[tableKey];
-  const tableName = t(tableConfig.uiName).toLowerCase();
+  const tableName = getLocalizedText(tableConfig.uiName).toLowerCase();
   const confirmed = confirm(
     getLanguage() === 'es'
       ? `¿Está seguro de que desea eliminar este ${tableName}?`
