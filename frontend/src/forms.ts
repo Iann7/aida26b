@@ -6,21 +6,7 @@ import type { TableKey, TableRecordMap } from './structure.js';
 import type { ColumnDef } from './types.js';
 
 let formContainer: HTMLElement | null = null;
-
-export function initForms(container: HTMLElement): void {
-  formContainer = container;
-}
-
-export function getRecordPath(recordValues: string[]): string {
-  return `/${recordValues.map((value) => encodeURIComponent(value)).join('/')}`;
-}
-
-export function hideAnyForm(): void {
-  if (!formContainer) return;
-  formContainer.style.display = 'none';
-  formContainer.innerHTML = '';
-}
-
+//#region getters
 function getPkFields(tableKey: TableKey): string[] {
   const tableConfig = structure.tables[tableKey];
   return Array.isArray(tableConfig.pk) ? tableConfig.pk : [tableConfig.pk];
@@ -30,26 +16,8 @@ function getFieldElementId(tableKey: TableKey, fieldName: string): string {
   return `${tableKey}-${fieldName}`;
 }
 
-function renderFormField<K extends TableKey>(
-  tableKey: K,
-  fieldName: keyof TableRecordMap[K] & string,
-  column: ColumnDef,
-  record?: Partial<TableRecordMap[K]>,
-  isEdit = false,
-): HTMLElement {
-  const id = getFieldElementId(tableKey, fieldName);
-  const wrapper = document.createElement('div');
-  wrapper.className = 'form-group';
-
-  const labelEl = document.createElement('label');
-  labelEl.htmlFor = id;
-  labelEl.textContent = getLocalizedText(column.label);
-  wrapper.appendChild(labelEl);
-
-  const renderer = getRenderer<K>(mapInputToRenderer(column.input));
-  wrapper.appendChild(renderer({ id, fieldName, column, record, isEdit }));
-
-  return wrapper;
+export function getRecordPath(recordValues: string[]): string {
+  return `/${recordValues.map((value) => encodeURIComponent(value)).join('/')}`;
 }
 
 function collectFormData<K extends TableKey>(tableKey: K): Partial<TableRecordMap[K]> {
@@ -77,7 +45,40 @@ function collectFormData<K extends TableKey>(tableKey: K): Partial<TableRecordMa
 
   return payload;
 }
+//#endregion  
+//#region initialization
+export function initForms(container: HTMLElement): void {
+  formContainer = container;
+}
+//#endregion 
+//region UI 
+export function hideAnyForm(): void {
+  if (!formContainer) return;
+  formContainer.style.display = 'none';
+  formContainer.innerHTML = '';
+}
+function renderFormField<K extends TableKey>(
+  tableKey: K,
+  fieldName: keyof TableRecordMap[K] & string,
+  column: ColumnDef,
+  record?: Partial<TableRecordMap[K]>,
+  isEdit = false,
+): HTMLElement {
+  const id = getFieldElementId(tableKey, fieldName);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'form-group';
 
+  const labelEl = document.createElement('label');
+  labelEl.htmlFor = id;
+  labelEl.textContent = getLocalizedText(column.label);
+  wrapper.appendChild(labelEl);
+
+  const renderer = getRenderer<K>(mapInputToRenderer(column.input));
+  wrapper.appendChild(renderer({ id, fieldName, column, record, isEdit }));
+
+  return wrapper;
+}
+//#endregion 
 export async function showAnyForm<K extends TableKey>(
   tableKey: K,
   options: {
@@ -147,3 +148,4 @@ export async function showAnyForm<K extends TableKey>(
     }
   });
 }
+//#endregion
