@@ -2,12 +2,11 @@
 import { getRecordPath, hideAnyForm, initForms, showAnyForm } from './forms.js';
 import { getLanguage, getLocalizedText, isLanguage, setLanguage } from './localization.js';
 import { createRecordActions, registerRecordActions } from './recordActions.js';
-import type { Language, MenuConfig, AppElements } from './types.js';
 import { structure, tableKeys } from './structure.js';
-import type { TableActions} from './table.js';
 import  { loadTableData} from './table.js';
-import type { TableKey} from './structure.js';
 import { renderMenu } from './menu.js';
+import type { Language, MenuConfig, AppElements,TableActions} from './types.js';
+import type { TableKey} from './structure.js';
 //#endregion 
 
 //#region Variables  

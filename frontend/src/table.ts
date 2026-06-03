@@ -2,11 +2,9 @@ import { API_BASE } from './api.js';
 import { getLocalizedText } from './localization.js';
 import { structure } from './structure.js';
 import type { TableKey, TableRecordMap } from './structure.js';
+import type  {TableActions} from './types.js'
 
-export type TableActions = {
-  onEdit: <K extends TableKey>(tableKey: K, ...pkValues: string[]) => void;
-  onDelete: <K extends TableKey>(tableKey: K, ...pkValues: string[]) => void;
-};
+
 
 export async function loadTableData<K extends TableKey>(
   sharedTable: HTMLTableElement,

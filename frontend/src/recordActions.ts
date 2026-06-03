@@ -3,7 +3,7 @@ import { getRecordPath, hideAnyForm, showAnyForm } from './forms.js';
 import { getLocalizedText } from './localization.js';
 import { structure } from './structure.js';
 import type { TableKey, TableRecordMap } from './structure.js';
-import type { TableActions } from './table.js';
+import type { TableActions } from './types.js';
 
 export type ReloadTableData = <K extends TableKey>(tableKey: K) => void;
 

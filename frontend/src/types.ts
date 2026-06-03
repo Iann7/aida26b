@@ -1,3 +1,4 @@
+import type { TableKey,TableRecordMap } from "./structure.js";
 export type Language = 'es' | 'en';
 
 export type LocalizedText = Record<Language, string>;
@@ -55,3 +56,9 @@ export type AppElements = {
   navRoot: HTMLElement;
   menuRoot: HTMLElement;
 };
+
+export type TableActions = {
+  onEdit: <K extends TableKey>(tableKey: K, ...pkValues: string[]) => void;
+  onDelete: <K extends TableKey>(tableKey: K, ...pkValues: string[]) => void;
+};
+
