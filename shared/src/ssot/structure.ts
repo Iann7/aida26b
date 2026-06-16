@@ -277,30 +277,7 @@ export const structure = {
           label: { es: 'Fuente', en: 'Source' },
           validator: { nullable: true },
         },
-        latitude: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Latitud', en: 'Latitude' },
-          validator: { nullable: true },
-        },
-        longitude: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Longitud', en: 'Longitude' },
-          validator: { nullable: true },
-        },
-        speed_knots: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Vel (kn)', en: 'Speed (kn)' },
-          validator: { nullable: true },
-        },
-        heading: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Rum', en: 'Heading' },
-          validator: { nullable: true },
-        },
+        // position fields removed: positions are stored in `positions` table
         payload: {
           type: 'string',
           input: 'textarea',
@@ -319,7 +296,7 @@ export const structure = {
       title: { es: 'Paquetes', en: 'Packets' },
       addButtonLabel: { es: 'Agregar Paquete', en: 'Add Packet' },
       referencedTables: ['vessels'],
-    } satisfies TableStructure,
+    } satisfies TableStructure
   },
 
   menu: {
