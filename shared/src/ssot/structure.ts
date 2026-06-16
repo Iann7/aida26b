@@ -108,162 +108,217 @@ export const structure = {
       addButtonLabel: { es: 'Agregar Alumno', en: 'Add Student' },
     } satisfies TableStructure,
 
-    subjects: {
+    vessels: {
       columns: {
-        cod_mat: {
+        id: {
           type: 'string',
-          label: { es: 'Código', en: 'Code' },
+          label: { es: 'ID', en: 'ID' },
           readonlyOnEdit: true,
-          validator: {
-            required: true,
-          },
+          validator: { required: true },
+        },
+
+        mmsi: {
+          type: 'number',
+          label: { es: 'MMSI', en: 'MMSI' },
+          validator: { nullable: true },
         },
 
         name: {
           type: 'string',
           label: { es: 'Nombre', en: 'Name' },
-          validator: {
-            required: true,
-          },
+          validator: { nullable: true },
         },
 
-        description: {
+        vessel_type: {
           type: 'string',
-          label: { es: 'Descripción', en: 'Description' },
-          input: 'textarea',
-          validator: {
-            nullable: true,
-          },
+          label: { es: 'Tipo de Barco', en: 'Vessel Type' },
+          validator: { nullable: true },
         },
 
-        credits: {
+        call_sign: {
+          type: 'string',
+          label: { es: 'Call Sign', en: 'Call Sign' },
+          validator: { nullable: true },
+        },
+
+        imo: {
           type: 'number',
-          label: { es: 'Créditos', en: 'Credits' },
-          input: 'number',
-          validator: {
-            nullable: true,
-            integer: true,
-            minValue: 1,
-          },
+          label: { es: 'IMO', en: 'IMO' },
+          validator: { nullable: true },
         },
 
-        department: {
+        flag_country: {
           type: 'string',
-          label: { es: 'Departamento', en: 'Department' },
-          validator: {
-            nullable: true,
-          },
+          label: { es: 'Bandera', en: 'Flag Country' },
+          validator: { nullable: true },
+        },
+
+        length_m: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Eslora (m)', en: 'Length (m)' },
+          validator: { nullable: true },
+        },
+
+        width_m: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Manga (m)', en: 'Width (m)' },
+          validator: { nullable: true },
+        },
+
+        created_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Creado', en: 'Created At' },
+          validator: { nullable: true },
         },
       },
-      pk: 'cod_mat',
-      uiName: { es: 'Materia', en: 'Subject' },
-      title: { es: 'Materias', en: 'Subjects' },
-      addButtonLabel: { es: 'Agregar Materia', en: 'Add Subject' },
+      pk: 'id',
+      uiName: { es: 'Barco', en: 'Vessel' },
+      title: { es: 'Barcos', en: 'Vessels' },
+      addButtonLabel: { es: 'Agregar Barco', en: 'Add Vessel' },
     } satisfies TableStructure,
 
-    enrollments: {
-      pk: ['numero_libreta', 'cod_mat'],
-      uiName: { es: 'Inscripción', en: 'Enrollment' },
+    regions: {
       columns: {
-        numero_libreta: {
+        id: {
           type: 'string',
-          label: { es: 'Número de Libreta', en: 'Student ID' },
+          label: { es: 'ID', en: 'ID' },
           readonlyOnEdit: true,
-          validator: {
-            required: true,
-            pattern: '^\\d{1,4}/\\d{2}$',
-            patternMessage:
-              'must match pattern NNNN/YY (1-4 digit number, slash, 2-digit year; leading zeros optional on the number)',
-            normalize: {
-              pattern: '^0+(?=\\d)',
-              replacement: '',
-            },
-          },
-          input: 'select',
-          foreignKey: {
-            table: 'students',
-            valueField: 'numero_libreta',
-            labelField: `first_name || ' ' || last_name`,
-          },
+          validator: { required: true },
         },
-
-        student_name: {
+        name: {
           type: 'string',
-          label: { es: 'Nombre del Alumno', en: 'Student Name' },
-          editable: false,
-          derivable: {
-            originTable: 'students',
-            sqlGenerationStatement:
-              `entityName.first_name || ' ' || entityName.last_name`,
-          },
+          label: { es: 'Nombre', en: 'Name' },
+          validator: { required: true },
         },
-
-        cod_mat: {
+        description: {
           type: 'string',
-          label: { es: 'Código de Materia', en: 'Subject Code' },
+          input: 'textarea',
+          label: { es: 'Descripción', en: 'Description' },
+          validator: { nullable: true },
+        },
+        min_lat: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Lat Mín', en: 'Min Lat' },
+          validator: { required: true },
+        },
+        max_lat: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Lat Máx', en: 'Max Lat' },
+          validator: { required: true },
+        },
+        min_lon: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Lon Mín', en: 'Min Lon' },
+          validator: { required: true },
+        },
+        max_lon: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Lon Máx', en: 'Max Lon' },
+          validator: { required: true },
+        },
+        created_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Creado', en: 'Created At' },
+          validator: { nullable: true },
+        },
+      },
+      pk: 'id',
+      uiName: { es: 'Región', en: 'Region' },
+      title: { es: 'Regiones', en: 'Regions' },
+      addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
+    } satisfies TableStructure,
+
+    packets: {
+      columns: {
+        id: {
+          type: 'string',
+          label: { es: 'ID', en: 'ID' },
           readonlyOnEdit: true,
-          validator: {
-            required: true,
-          },
+          validator: { required: true },
+        },
+        vessel_id: {
+          type: 'string',
+          label: { es: 'Barco', en: 'Vessel' },
           input: 'select',
+          validator: { nullable: true },
           foreignKey: {
-            table: 'subjects',
-            valueField: 'cod_mat',
+            table: 'vessels',
+            valueField: 'id',
             labelField: 'name',
           },
         },
-
-        subject_name: {
+        packet_type: {
           type: 'string',
-          label: { es: 'Nombre de Materia', en: 'Subject Name' },
-          editable: false,
-          derivable: {
-            originTable: 'subjects',
-            sqlGenerationStatement: `entityName.name`,
-          },
+          label: { es: 'Tipo de Paquete', en: 'Packet Type' },
+          validator: { nullable: true },
         },
-
-        enrollment_date: {
-          type: 'string',
-          label: { es: 'Fecha de Inscripción', en: 'Enrollment Date' },
-          input: 'date',
-          validator: {
-            required: true,
-            minDate: '1821-08-09',
-          },
-        },
-
-        grade: {
+        sequence_number: {
           type: 'number',
-          label: { es: 'Nota', en: 'Grade' },
           input: 'number',
-          validator: {
-            nullable: true,
-            minValue: 0,
-            maxValue: 10,
-          },
+          label: { es: 'Seq', en: 'Sequence' },
+          validator: { nullable: true },
         },
-
-        status: {
+        received_at: {
           type: 'string',
-          label: { es: 'Estado', en: 'Status' },
-          input: 'select',
-          validator: {
-            nullable: true,
-          },
-          options: [
-            { value: 'enrolled', label: { es: 'Inscrito', en: 'Enrolled' } },
-            {
-              value: 'completed',
-              label: { es: 'Completado', en: 'Completed' },
-            },
-            { value: 'failed', label: { es: 'Fallido', en: 'Failed' } },
-          ],
+          input: 'date',
+          label: { es: 'Recibido', en: 'Received At' },
+          validator: { nullable: true },
+        },
+        source: {
+          type: 'string',
+          label: { es: 'Fuente', en: 'Source' },
+          validator: { nullable: true },
+        },
+        latitude: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Latitud', en: 'Latitude' },
+          validator: { nullable: true },
+        },
+        longitude: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Longitud', en: 'Longitude' },
+          validator: { nullable: true },
+        },
+        speed_knots: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Vel (kn)', en: 'Speed (kn)' },
+          validator: { nullable: true },
+        },
+        heading: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Rum', en: 'Heading' },
+          validator: { nullable: true },
+        },
+        payload: {
+          type: 'string',
+          input: 'textarea',
+          label: { es: 'Payload (JSON)', en: 'Payload (JSON)' },
+          validator: { nullable: true },
+        },
+        created_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Creado', en: 'Created At' },
+          validator: { nullable: true },
         },
       },
-      title: { es: 'Inscripciones', en: 'Enrollments' },
-      addButtonLabel: { es: 'Agregar Inscripción', en: 'Add Enrollment' },
-      referencedTables: ['students', 'subjects'],
+      pk: 'id',
+      uiName: { es: 'Paquete', en: 'Packet' },
+      title: { es: 'Paquetes', en: 'Packets' },
+      addButtonLabel: { es: 'Agregar Paquete', en: 'Add Packet' },
+      referencedTables: ['vessels'],
     } satisfies TableStructure,
   },
 
@@ -302,8 +357,8 @@ export const structure = {
     actions: { es: 'Acciones', en: 'Actions' },
     add: { es: 'Agregar', en: 'Add' },
     appTitle: {
-      es: 'Sistema de Gestión Académica',
-      en: 'Academic Management System',
+      es: 'Sistema de Gestión de Barcos',
+      en: 'Vessel Management System',
     },
     cancel: { es: 'Cancelar', en: 'Cancel' },
     delete: { es: 'Eliminar', en: 'Delete' },
