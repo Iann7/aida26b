@@ -616,6 +616,41 @@ window.addEventListener('popstate', () => {
 // Menu
 // -----------------------------------------------------------------------------
 
+const menu_handlers = {
+  theme: (value: string) => {
+    try {
+      if (!value) throw new Error('Theme value is required');
+
+      document.body.setAttribute('data-theme', value);
+      localStorage.setItem('theme', value);
+    } catch (err) {
+      console.error('Error changing theme:', err);
+      alert(getLocalizedText(structure.commonText.themeChangeError));
+    }
+  },
+  language: (value: string) => {
+    try {
+      if (value !== 'es' && value !== 'en') {
+        throw new Error('Invalid language value');
+      }
+
+      localStorage.setItem('language', value);
+
+      window.dispatchEvent(
+        new CustomEvent('languagechange', {
+          detail: { language: value },
+        })
+      );
+    } catch (err) {
+      console.error('Error changing language:', err);
+      alert(getLocalizedText(structure.commonText.languageChangeError));
+    }
+  },
+  map: () => {
+
+  }
+}
+
 function renderAnyMenuOption(key: keyof typeof structure.menu): void {
   const config = structure.menu[key];
 
@@ -651,7 +686,7 @@ function renderAnyMenuOption(key: keyof typeof structure.menu): void {
   select.addEventListener('change', (event) => {
     const value = (event.target as HTMLSelectElement).value;
 
-    (config.handler as (value: string) => void)(value);
+    (menu_handlers[key] as (value: string) => void)(value);
 
     if (key === 'language' && isLanguage(value)) {
       setLanguage(value);

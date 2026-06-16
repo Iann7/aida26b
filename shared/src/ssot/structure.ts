@@ -271,17 +271,7 @@ export const structure = {
     theme: {
       title: { es: 'Tema', en: 'Theme' },
       id: 'theme-picker',
-      handler: (value: string) => {
-        try {
-          if (!value) throw new Error('Theme value is required');
-
-          document.body.setAttribute('data-theme', value);
-          localStorage.setItem('theme', value);
-        } catch (err) {
-          console.error('Error changing theme:', err);
-          alert(localizeText(structure.commonText.themeChangeError));
-        }
-      },
+      input_type: 'select',
       options: [
         { value: 'light', label: { es: 'Claro', en: 'Light' } },
         { value: 'dark', label: { es: 'Oscuro', en: 'Dark' } },
@@ -292,30 +282,20 @@ export const structure = {
     language: {
       title: { es: 'Idioma', en: 'Language' },
       id: 'language-picker',
-      handler: (value: string) => {
-        try {
-          if (value !== 'es' && value !== 'en') {
-            throw new Error('Invalid language value');
-          }
-
-          localStorage.setItem('language', value);
-
-          window.dispatchEvent(
-            new CustomEvent('languagechange', {
-              detail: { language: value },
-            })
-          );
-        } catch (err) {
-          console.error('Error changing language:', err);
-          alert(localizeText(structure.commonText.languageChangeError));
-        }
-      },
+      input_type: 'select',
       options: [
         { value: 'es', label: { es: 'Español', en: 'Spanish' } },
         { value: 'en', label: { es: 'Inglés', en: 'English' } },
       ],
       initial: () => localStorage.getItem('language') || 'es',
     },
+    map: {
+      title: { es: 'Mapa', en: 'Map' },
+      id: 'map-button',
+      input_type: 'button',
+      options: [],
+      initial: () => null,
+    }
   },
 
   commonText: {
