@@ -42,10 +42,7 @@ CREATE TABLE IF NOT EXISTS packets (
     sequence_number bigint,
     received_at timestamptz NOT NULL DEFAULT now(),
     source text,
-    latitude numeric,
-    longitude numeric,
-    speed_knots numeric,
-    heading numeric,
+    -- Position fields removed: positions are stored in `positions` table
     payload jsonb,
     created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -54,6 +51,23 @@ CREATE TABLE IF NOT EXISTS packets (
 CREATE INDEX IF NOT EXISTS idx_packets_vessel_id ON packets(vessel_id);
 CREATE INDEX IF NOT EXISTS idx_packets_received_at ON packets(received_at);
 CREATE INDEX IF NOT EXISTS idx_regions_bbox ON regions(min_lat, max_lat, min_lon, max_lon);
+
+-- Tabla: positions (posiciones normalizadas por barco)
+CREATE TABLE IF NOT EXISTS positions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    vessel_id uuid REFERENCES vessels(id) ON DELETE CASCADE,
+    latitude numeric NOT NULL,
+    longitude numeric NOT NULL,
+    speed_knots numeric,
+    heading numeric,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    source text,
+    packet_id uuid REFERENCES packets(id) ON DELETE SET NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_positions_vessel_id ON positions(vessel_id);
+CREATE INDEX IF NOT EXISTS idx_positions_recorded_at ON positions(recorded_at);
 
 COMMIT;
 
