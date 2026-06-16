@@ -647,56 +647,94 @@ const menu_handlers = {
     }
   },
   map: () => {
+    const existing = document.getElementById('map-container');
 
+    if (existing) {
+      // hide map, show table and controls
+      existing.remove();
+      filterContainer.style.display = '';
+      paginationContainer.style.display = '';
+      sharedTable.style.display = '';
+    } else {
+      // hide table and controls
+      filterContainer.style.display = 'none';
+      paginationContainer.style.display = 'none';
+      sharedTable.style.display = 'none';
+
+      // create map container with an interactive OpenStreetMap iframe
+      const mapContainer = document.createElement('div');
+      mapContainer.id = 'map-container';
+      mapContainer.style.width = '100%';
+      mapContainer.style.height = '600px';
+      mapContainer.style.marginTop = '10px';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://www.openstreetmap.org/export/embed.html?bbox=-180.0,-85.0,180.0,85.0';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = '0';
+
+      mapContainer.appendChild(iframe);
+
+      // insert map container where the table was
+      sharedTable.parentNode?.insertBefore(mapContainer, sharedTable);
+    }
   }
 }
 
 function renderAnyMenuOption(key: keyof typeof structure.menu): void {
   const config = structure.menu[key];
-
+  
   if (!config.options) return;
+  
+  if(config.input_type == 'select'){
+    const wrapper = document.createElement('div');
+    wrapper.className = 'picker-wrapper';
 
-  const wrapper = document.createElement('div');
-  wrapper.className = 'picker-wrapper';
+    const label = document.createElement('label');
+    label.htmlFor = config.id;
+    label.textContent = getLocalizedText(config.title);
 
-  const label = document.createElement('label');
-  label.htmlFor = config.id;
-  label.textContent = getLocalizedText(config.title);
+    const select = document.createElement('select');
+    select.id = config.id;
+    select.classList.add('picker');
 
-  const select = document.createElement('select');
-  select.id = config.id;
-  select.classList.add('picker');
+    const initialValue =
+      typeof config.initial === 'function' ? config.initial() : config.initial;
 
-  const initialValue =
-    typeof config.initial === 'function' ? config.initial() : config.initial;
+    config.options.forEach((option) => {
+      const optionEl = document.createElement('option');
 
-  config.options.forEach((option) => {
-    const optionEl = document.createElement('option');
+      optionEl.value = option.value;
+      optionEl.textContent = getLocalizedText(option.label);
 
-    optionEl.value = option.value;
-    optionEl.textContent = getLocalizedText(option.label);
+      if (option.value === initialValue) {
+        optionEl.selected = true;
+      }
 
-    if (option.value === initialValue) {
-      optionEl.selected = true;
-    }
+      select.appendChild(optionEl);
+    });
 
-    select.appendChild(optionEl);
-  });
+    select.addEventListener('change', (event) => {
+      const value = (event.target as HTMLSelectElement).value;
 
-  select.addEventListener('change', (event) => {
-    const value = (event.target as HTMLSelectElement).value;
+      (menu_handlers[key] as (value: string) => void)(value);
 
-    (menu_handlers[key] as (value: string) => void)(value);
+      if (key === 'language' && isLanguage(value)) {
+        setLanguage(value);
+        applyLanguageToUI();
+      }
+    });
 
-    if (key === 'language' && isLanguage(value)) {
-      setLanguage(value);
-      applyLanguageToUI();
-    }
-  });
-
-  wrapper.appendChild(label);
-  wrapper.appendChild(select);
-  menuContainer.appendChild(wrapper);
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+    menuContainer.appendChild(wrapper);
+  } else if(config.input_type === 'button'){
+    const button = document.createElement('button');
+    button.textContent = getLocalizedText(config.title);
+    button.addEventListener('click', menu_handlers[key] as () => void);
+    menuContainer.appendChild(button);
+  }
 }
 
 function showMenu(): void {
