@@ -5,6 +5,7 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+// Use global fetch (Node 18+) or a polyfill if available in the environment
 
 import * as auth from './auth';
 
@@ -564,4 +565,78 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
+
+  const enableUpdater = (process.env.ENABLE_POSITION_UPDATER || 'false') === 'true';
+
+  // Por ahora descativado, ver bien como fecthear la informacion. La ides es que to corre cada cierto
+  // intervalo y actualice la tabla de positions con la info mas reciente de cada barco
+  if (false) {
+    const VESSEL_API_BASE = process.env.VESSEL_API_BASE || '';
+    const VESSEL_API_KEY = process.env.VESSEL_API_KEY || '';
+    const INTERVAL_S = parseInt(process.env.POSITION_UPDATER_INTERVAL || '60', 10);
+
+    async function fetchAndStorePositions(): Promise<void> {
+      try {
+        const vesselsRes = await pool.query('SELECT id, mmsi FROM vessels');
+        const vessels = vesselsRes.rows;
+
+        for (const v of vessels) {
+          try {
+            if (!v.mmsi) continue;
+
+            const url = VESSEL_API_BASE
+              ? `${VESSEL_API_BASE.replace(/\/$/, '')}?mmsi=${encodeURIComponent(String(v.mmsi))}`
+              : '';
+
+            if (!url) continue;
+
+            const headers: Record<string, string> = {};
+            if (VESSEL_API_KEY) headers['Authorization'] = `Bearer ${VESSEL_API_KEY}`;
+
+            const resp = await fetch(url, { headers });
+
+            if (!resp.ok) {
+              console.warn(`Failed fetching vessel ${v.mmsi}: ${resp.status}`);
+              continue;
+            }
+
+            const data = await resp.json();
+
+            const latitude = data.latitude ?? data.lat ?? null;
+            const longitude = data.longitude ?? data.lon ?? data.lng ?? null;
+            const speed_knots = data.speed_knots ?? data.speed ?? null;
+            const heading = data.heading ?? data.course ?? null;
+            const recorded_at = data.recorded_at ?? data.timestamp ?? null;
+            const source = data.source ?? null;
+            const packet_id = data.packet_id ?? null;
+
+            if (latitude == null || longitude == null) continue;
+
+            await pool.query(
+              `INSERT INTO positions
+               (vessel_id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id)
+               VALUES ($1,$2,$3,$4,$5,COALESCE($6, now()),$7,$8)`,
+              [v.id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id]
+            );
+          } catch (err) {
+            console.error('Error processing vessel', v, err);
+          }
+        }
+      } catch (err) {
+        console.error('Position updater failed:', err);
+      }
+    }
+
+    (async () => {
+      try {
+        await fetchAndStorePositions();
+      } catch (err) {
+        console.error('Initial position fetch failed:', err);
+      }
+
+      setInterval(() => {
+        void fetchAndStorePositions();
+      }, Math.max(1000, INTERVAL_S * 1000));
+    })();
+  }
 }

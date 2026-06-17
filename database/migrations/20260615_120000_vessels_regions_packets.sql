@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS packets (
     sequence_number bigint,
     received_at timestamptz NOT NULL DEFAULT now(),
     source text,
-    -- Position fields removed: positions are stored in `positions` table
     payload jsonb,
     created_at timestamptz NOT NULL DEFAULT now()
 );
