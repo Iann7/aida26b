@@ -596,7 +596,7 @@ function showSection(section: TableKey, pushState = true): void {
   addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
 
   if (adminActions) {
-    adminActions.hidden = currentUser?.role !== 'admin' || section !== 'students';
+    adminActions.hidden = currentUser?.role !== 'admin';
   }
 
   hideAnyForm();
@@ -1709,13 +1709,7 @@ async function showAnyForm<K extends TableKey>(
 
   fields.forEach((field) => form.appendChild(field));
 
-  if (tableKey === 'students' && !isEdit) {
-    appendPasswordField(
-      form,
-      'students-password',
-      getLocalizedText(structure.commonText.initialPassword)
-    );
-  }
+  
 
   const actionsDiv = document.createElement('div');
   actionsDiv.className = 'form-actions';
@@ -1748,9 +1742,7 @@ async function showAnyForm<K extends TableKey>(
 
     const payload = collectFormData(tableKey) as Record<string, unknown>;
 
-    if (tableKey === 'students' && !isEdit) {
-      payload.password = (document.getElementById('students-password') as HTMLInputElement).value;
-    }
+  
 
     const pkAndTheirValues = getPkFields(tableKey).map((pkFieldName) => {
       const value =
@@ -1781,12 +1773,9 @@ async function showAnyForm<K extends TableKey>(
 
       hideAnyForm();
 
-      if (tableKey === 'students' && !isEdit && payload.password) {
-        setMessage(getLocalizedText(structure.commonText.studentAndUserCreated));
-      } else {
-        showSuccessMessage(responseJson.message ?? '');
-      }
-
+      
+      showSuccessMessage(responseJson.message ?? '');
+      
       loadTableData(tableKey);
     } catch (error) {
       const message = (error as Error).message;
