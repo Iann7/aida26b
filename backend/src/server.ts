@@ -541,6 +541,17 @@ app.delete(
   }
 );
 
+//Positions API route
+app.get('/api/positions/:vessel_mmsi', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const vesselMmsi = req.params.vessel_mmsi;
+    const result = await pool.query('SELECT * FROM positions WHERE vessel_mmsi = $1', [vesselMmsi]);
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching positions:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+})
 // Resolve frontend static files directory
 let frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
