@@ -16,6 +16,10 @@ import {
 import { getPkFields } from '@shared/utils/utils';
 import { validateField } from '@shared/validation/validate';
 import '../styles/style.css';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
 
 const API_BASE = '/api';
 const PAGE_SIZE = 20;
@@ -615,6 +619,22 @@ window.addEventListener('popstate', () => {
 // -----------------------------------------------------------------------------
 // Menu
 // -----------------------------------------------------------------------------
+let map: Map | null = null;
+
+function createMap(target: string): Map {
+  return new Map({
+    target,
+    layers: [
+      new TileLayer({
+        source: new OSM(),
+      }),
+    ],
+    view: new View({
+      center: [0, 0],
+      zoom: 2,
+    }),
+  });
+}
 
 const menu_handlers = {
   theme: (value: string) => {
@@ -646,39 +666,56 @@ const menu_handlers = {
       alert(getLocalizedText(structure.commonText.languageChangeError));
     }
   },
-  map: () => {
+  map: async () => {
     const existing = document.getElementById('map-container');
 
     if (existing) {
-      // hide map, show table and controls
       existing.remove();
+
       filterContainer.style.display = '';
       paginationContainer.style.display = '';
       sharedTable.style.display = '';
-    } else {
-      // hide table and controls
-      filterContainer.style.display = 'none';
-      paginationContainer.style.display = 'none';
-      sharedTable.style.display = 'none';
 
-      // create map container with an interactive OpenStreetMap iframe
-      const mapContainer = document.createElement('div');
-      mapContainer.id = 'map-container';
-      mapContainer.style.width = '100%';
-      mapContainer.style.height = '600px';
-      mapContainer.style.marginTop = '10px';
+      var intervalIdStr = sessionStorage.getItem('myIntervalId');
+      if (intervalIdStr) clearInterval(Number(intervalIdStr));
 
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.openstreetmap.org/export/embed.html?bbox=-180.0,-85.0,180.0,85.0';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = '0';
-
-      mapContainer.appendChild(iframe);
-
-      // insert map container where the table was
-      sharedTable.parentNode?.insertBefore(mapContainer, sharedTable);
+      map = null;
+      return;
     }
+
+    filterContainer.style.display = 'none';
+    paginationContainer.style.display = 'none';
+    sharedTable.style.display = 'none';
+
+    const container = document.createElement('div');
+    container.id = 'map-container';
+
+    const mapDiv = document.createElement('div');
+    mapDiv.id = 'map';
+
+    mapDiv.style.width = '100%';
+    mapDiv.style.height = '600px';
+
+    container.appendChild(mapDiv);
+
+    sharedTable.parentNode?.insertBefore(container, sharedTable);
+
+    map = createMap('map');
+
+    (async () => {
+      try {
+        console.log("Fetching initial positions for map...");
+      } catch (err) {
+        console.error('Initial position fetch failed:', err);
+      }
+    })();
+
+    var intervalId = setInterval(async () => {
+        console.log("Fetching updated positions for map...");
+    }, 1000);
+
+    sessionStorage.setItem('myIntervalId', intervalId.toString());
+    
   }
 }
 
@@ -1709,8 +1746,6 @@ async function showAnyForm<K extends TableKey>(
 
   fields.forEach((field) => form.appendChild(field));
 
-  
-
   const actionsDiv = document.createElement('div');
   actionsDiv.className = 'form-actions';
 
@@ -1772,7 +1807,6 @@ async function showAnyForm<K extends TableKey>(
       }
 
       hideAnyForm();
-
       
       showSuccessMessage(responseJson.message ?? '');
       
