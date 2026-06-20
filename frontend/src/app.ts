@@ -83,8 +83,6 @@ const statusMessage = document.getElementById('status-message') as HTMLElement;
 const viewTitle = document.getElementById('view-title') as HTMLElement;
 const addRecordBtn = document.getElementById('add-record-btn') as HTMLButtonElement;
 const adminActions = document.getElementById('admin-actions') as HTMLElement;
-const addTeacherBtn = document.getElementById('add-teacher-btn') as HTMLButtonElement;
-const addAdminBtn = document.getElementById('add-admin-btn') as HTMLButtonElement;
 
 const formContainer = document.getElementById('record-form') as HTMLElement;
 const sharedTable = document.getElementById('records-table') as HTMLTableElement;
@@ -520,8 +518,6 @@ function applyStaticLanguageToUI(): void {
   setLocalizedElementText('new-password-label', structure.commonText.newPassword);
   setLocalizedElementText('password-submit-btn', structure.commonText.update);
   setLocalizedElementText('logout-btn', structure.commonText.logout);
-  setLocalizedElementText('add-teacher-btn', structure.commonText.addProfessor);
-  setLocalizedElementText('add-admin-btn', structure.commonText.addAdmin);
 }
 
 function updateNavButtonsText(): void {
@@ -1937,9 +1933,6 @@ const initialTheme = localStorage.getItem('theme') || 'light';
 document.body.setAttribute('data-theme', initialTheme);
 
 applyStaticLanguageToUI();
-
-addTeacherBtn.addEventListener('click', () => showUserForm('editor'));
-addAdminBtn.addEventListener('click', () => showUserForm('admin'));
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
