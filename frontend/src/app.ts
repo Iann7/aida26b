@@ -16,6 +16,10 @@ import {
 import { getPkFields } from '@shared/utils/utils';
 import { validateField } from '@shared/validation/validate';
 import '../styles/style.css';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
 
 const API_BASE = '/api';
 const PAGE_SIZE = 20;
@@ -79,8 +83,6 @@ const statusMessage = document.getElementById('status-message') as HTMLElement;
 const viewTitle = document.getElementById('view-title') as HTMLElement;
 const addRecordBtn = document.getElementById('add-record-btn') as HTMLButtonElement;
 const adminActions = document.getElementById('admin-actions') as HTMLElement;
-const addTeacherBtn = document.getElementById('add-teacher-btn') as HTMLButtonElement;
-const addAdminBtn = document.getElementById('add-admin-btn') as HTMLButtonElement;
 
 const formContainer = document.getElementById('record-form') as HTMLElement;
 const sharedTable = document.getElementById('records-table') as HTMLTableElement;
@@ -516,8 +518,6 @@ function applyStaticLanguageToUI(): void {
   setLocalizedElementText('new-password-label', structure.commonText.newPassword);
   setLocalizedElementText('password-submit-btn', structure.commonText.update);
   setLocalizedElementText('logout-btn', structure.commonText.logout);
-  setLocalizedElementText('add-teacher-btn', structure.commonText.addProfessor);
-  setLocalizedElementText('add-admin-btn', structure.commonText.addAdmin);
 }
 
 function updateNavButtonsText(): void {
@@ -570,6 +570,8 @@ function resetStateForTable(tableKey: TableKey): void {
 }
 
 function showSection(section: TableKey, pushState = true): void {
+  hideMap();
+  
   if (activeTableKey !== section && pushState) {
     resetStateForTable(section);
   }
@@ -604,6 +606,32 @@ function showSection(section: TableKey, pushState = true): void {
   loadTableData(section);
 }
 
+function hideMap(): void {
+  const mapContainer = document.getElementById('map-container');
+  if (mapContainer) {
+    mapContainer.remove();
+
+    // restore UI
+    filterContainer.style.display = '';
+    paginationContainer.style.display = '';
+    sharedTable.style.display = '';
+
+    addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
+
+    if (adminActions) adminActions.hidden = currentUser?.role !== 'admin';
+
+    if (mapControlsContainer) {
+      mapControlsContainer.remove();
+      mapControlsContainer = null;
+    }
+
+    const intervalIdStr = sessionStorage.getItem('myIntervalId');
+    if (intervalIdStr) clearInterval(Number(intervalIdStr));
+
+    map = null;
+  }
+}
+
 window.addEventListener('popstate', () => {
   syncUrlToState();
 
@@ -615,6 +643,23 @@ window.addEventListener('popstate', () => {
 // -----------------------------------------------------------------------------
 // Menu
 // -----------------------------------------------------------------------------
+let map: Map | null = null;
+let mapControlsContainer: HTMLElement | null = null;
+
+function createMap(target: string): Map {
+  return new Map({
+    target,
+    layers: [
+      new TileLayer({
+        source: new OSM(),
+      }),
+    ],
+    view: new View({
+      center: [0, 0],
+      zoom: 2,
+    }),
+  });
+}
 
 const menu_handlers = {
   theme: (value: string) => {
@@ -646,39 +691,84 @@ const menu_handlers = {
       alert(getLocalizedText(structure.commonText.languageChangeError));
     }
   },
-  map: () => {
+  map: async () => {
     const existing = document.getElementById('map-container');
 
     if (existing) {
-      // hide map, show table and controls
       existing.remove();
+      // restore UI
       filterContainer.style.display = '';
       paginationContainer.style.display = '';
       sharedTable.style.display = '';
-    } else {
-      // hide table and controls
-      filterContainer.style.display = 'none';
-      paginationContainer.style.display = 'none';
-      sharedTable.style.display = 'none';
 
-      // create map container with an interactive OpenStreetMap iframe
-      const mapContainer = document.createElement('div');
-      mapContainer.id = 'map-container';
-      mapContainer.style.width = '100%';
-      mapContainer.style.height = '600px';
-      mapContainer.style.marginTop = '10px';
+      // restore add record button visibility
+      addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
 
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.openstreetmap.org/export/embed.html?bbox=-180.0,-85.0,180.0,85.0';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = '0';
+      if (adminActions) {
+        adminActions.hidden = currentUser?.role !== 'admin';
+      }
 
-      mapContainer.appendChild(iframe);
+      // remove map controls if present
+      if (mapControlsContainer) {
+        mapControlsContainer.remove();
+        mapControlsContainer = null;
+      }
 
-      // insert map container where the table was
-      sharedTable.parentNode?.insertBefore(mapContainer, sharedTable);
+      var intervalIdStr = sessionStorage.getItem('myIntervalId');
+      if (intervalIdStr) clearInterval(Number(intervalIdStr));
+
+      map = null;
+      return;
     }
+
+
+    // hide table UI when showing map
+    filterContainer.style.display = 'none';
+    paginationContainer.style.display = 'none';
+    sharedTable.style.display = 'none';
+
+    // hide add record button and admin actions while on map
+    addRecordBtn.style.display = 'none';
+    if (adminActions) adminActions.hidden = true;
+
+    const container = document.createElement('div');
+    container.id = 'map-container';
+
+    const mapDiv = document.createElement('div');
+    mapDiv.id = 'map';
+
+    mapDiv.style.width = '100%';
+    mapDiv.style.height = '600px';
+
+    container.appendChild(mapDiv);
+
+    sharedTable.parentNode?.insertBefore(container, sharedTable);
+    // insert map-specific controls above the section/nav buttons
+    try {
+      mapControlsContainer = await createMapControls();
+      if (navContainer.parentNode && mapControlsContainer) {
+        navContainer.parentNode.insertBefore(mapControlsContainer, navContainer);
+      }
+    } catch (err) {
+      console.error('Error creating map controls:', err);
+    }
+
+    map = createMap('map');
+
+    (async () => {
+      try {
+        console.log("Fetching initial positions for map...");
+      } catch (err) {
+        console.error('Initial position fetch failed:', err);
+      }
+    })();
+
+    var intervalId = setInterval(async () => {
+        console.log("Fetching updated positions for map...");
+    }, 1000);
+
+    sessionStorage.setItem('myIntervalId', intervalId.toString());
+    
   }
 }
 
@@ -735,6 +825,51 @@ function renderAnyMenuOption(key: keyof typeof structure.menu): void {
     button.addEventListener('click', menu_handlers[key] as () => void);
     menuContainer.appendChild(button);
   }
+}
+
+type MapControlConfig = {
+  key: string;
+  hanlder: (value: string) => Promise<void>; // Al ser async, devuelve una Promesa vacía
+}
+
+const mapControls = {
+  vesssels:{
+    key: 'vessels',
+    hanlder: async (value: string) => {
+
+    }
+  } as MapControlConfig,
+}
+
+async function createMapControls(): Promise<HTMLElement> {
+  const container = document.createElement('div');
+  container.className = 'map-controls';
+  container.style.display = 'flex';
+  container.style.gap = '8px';
+  container.style.marginBottom = '8px';
+
+  const controls = Object.entries(mapControls) as Array<[string, MapControlConfig]>;
+
+  controls.forEach(async ([keyName, controlConfig]) => {
+    const select = document.createElement('select');
+    select.id = 'map-filter-' + controlConfig.key; 
+  
+    container.appendChild(select);
+
+    const options = await fetchRows(controlConfig.key)
+
+    options.forEach((option) => {
+      const opt = document.createElement('option');
+      select.appendChild(opt);
+    });
+
+    select.addEventListener('change', async (event) => {
+      const value = (event.target as HTMLSelectElement).value;
+      await controlConfig.hanlder(value);
+    })
+  })
+  
+  return container;
 }
 
 function showMenu(): void {
@@ -1709,8 +1844,6 @@ async function showAnyForm<K extends TableKey>(
 
   fields.forEach((field) => form.appendChild(field));
 
-  
-
   const actionsDiv = document.createElement('div');
   actionsDiv.className = 'form-actions';
 
@@ -1772,7 +1905,6 @@ async function showAnyForm<K extends TableKey>(
       }
 
       hideAnyForm();
-
       
       showSuccessMessage(responseJson.message ?? '');
       
@@ -1903,9 +2035,6 @@ const initialTheme = localStorage.getItem('theme') || 'light';
 document.body.setAttribute('data-theme', initialTheme);
 
 applyStaticLanguageToUI();
-
-addTeacherBtn.addEventListener('click', () => showUserForm('editor'));
-addAdminBtn.addEventListener('click', () => showUserForm('admin'));
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
