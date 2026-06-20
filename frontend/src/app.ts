@@ -570,6 +570,8 @@ function resetStateForTable(tableKey: TableKey): void {
 }
 
 function showSection(section: TableKey, pushState = true): void {
+  hideMap();
+  
   if (activeTableKey !== section && pushState) {
     resetStateForTable(section);
   }
@@ -604,6 +606,32 @@ function showSection(section: TableKey, pushState = true): void {
   loadTableData(section);
 }
 
+function hideMap(): void {
+  const mapContainer = document.getElementById('map-container');
+  if (mapContainer) {
+    mapContainer.remove();
+
+    // restore UI
+    filterContainer.style.display = '';
+    paginationContainer.style.display = '';
+    sharedTable.style.display = '';
+
+    addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
+
+    if (adminActions) adminActions.hidden = currentUser?.role !== 'admin';
+
+    if (mapControlsContainer) {
+      mapControlsContainer.remove();
+      mapControlsContainer = null;
+    }
+
+    const intervalIdStr = sessionStorage.getItem('myIntervalId');
+    if (intervalIdStr) clearInterval(Number(intervalIdStr));
+
+    map = null;
+  }
+}
+
 window.addEventListener('popstate', () => {
   syncUrlToState();
 
@@ -616,6 +644,7 @@ window.addEventListener('popstate', () => {
 // Menu
 // -----------------------------------------------------------------------------
 let map: Map | null = null;
+let mapControlsContainer: HTMLElement | null = null;
 
 function createMap(target: string): Map {
   return new Map({
@@ -667,10 +696,23 @@ const menu_handlers = {
 
     if (existing) {
       existing.remove();
-
+      // restore UI
       filterContainer.style.display = '';
       paginationContainer.style.display = '';
       sharedTable.style.display = '';
+
+      // restore add record button visibility
+      addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
+
+      if (adminActions) {
+        adminActions.hidden = currentUser?.role !== 'admin';
+      }
+
+      // remove map controls if present
+      if (mapControlsContainer) {
+        mapControlsContainer.remove();
+        mapControlsContainer = null;
+      }
 
       var intervalIdStr = sessionStorage.getItem('myIntervalId');
       if (intervalIdStr) clearInterval(Number(intervalIdStr));
@@ -679,9 +721,15 @@ const menu_handlers = {
       return;
     }
 
+
+    // hide table UI when showing map
     filterContainer.style.display = 'none';
     paginationContainer.style.display = 'none';
     sharedTable.style.display = 'none';
+
+    // hide add record button and admin actions while on map
+    addRecordBtn.style.display = 'none';
+    if (adminActions) adminActions.hidden = true;
 
     const container = document.createElement('div');
     container.id = 'map-container';
@@ -695,6 +743,15 @@ const menu_handlers = {
     container.appendChild(mapDiv);
 
     sharedTable.parentNode?.insertBefore(container, sharedTable);
+    // insert map-specific controls above the section/nav buttons
+    try {
+      mapControlsContainer = await createMapControls();
+      if (navContainer.parentNode && mapControlsContainer) {
+        navContainer.parentNode.insertBefore(mapControlsContainer, navContainer);
+      }
+    } catch (err) {
+      console.error('Error creating map controls:', err);
+    }
 
     map = createMap('map');
 
@@ -768,6 +825,51 @@ function renderAnyMenuOption(key: keyof typeof structure.menu): void {
     button.addEventListener('click', menu_handlers[key] as () => void);
     menuContainer.appendChild(button);
   }
+}
+
+type MapControlConfig = {
+  key: string;
+  hanlder: (value: string) => Promise<void>; // Al ser async, devuelve una Promesa vacía
+}
+
+const mapControls = {
+  vesssels:{
+    key: 'vessels',
+    hanlder: async (value: string) => {
+
+    }
+  } as MapControlConfig,
+}
+
+async function createMapControls(): Promise<HTMLElement> {
+  const container = document.createElement('div');
+  container.className = 'map-controls';
+  container.style.display = 'flex';
+  container.style.gap = '8px';
+  container.style.marginBottom = '8px';
+
+  const controls = Object.entries(mapControls) as Array<[string, MapControlConfig]>;
+
+  controls.forEach(async ([keyName, controlConfig]) => {
+    const select = document.createElement('select');
+    select.id = 'map-filter-' + controlConfig.key; 
+  
+    container.appendChild(select);
+
+    const options = await fetchRows(controlConfig.key)
+
+    options.forEach((option) => {
+      const opt = document.createElement('option');
+      select.appendChild(opt);
+    });
+
+    select.addEventListener('change', async (event) => {
+      const value = (event.target as HTMLSelectElement).value;
+      await controlConfig.hanlder(value);
+    })
+  })
+  
+  return container;
 }
 
 function showMenu(): void {
