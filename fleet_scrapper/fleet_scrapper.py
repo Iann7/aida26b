@@ -4,11 +4,11 @@ import json
 from datetime import datetime, timezone
 import os
 import uuid 
-import psycopg2 
+import psycopg
 fleet_id = []
 FLEET_API_KEY_ENV = "FLEET_API_KEY"
 def connect_db():
-     return psycopg2.connect(
+     return psycopg.connect(
           host      = os.environ["DB_HOST"],
           port      = os.environ.get("DB_PORT","5432"),
           dbname    = os.environ["DB_NAME"],
