@@ -67,6 +67,7 @@ async function cli(): Promise<void> {
   const { pool } = await import('./db');
   try {
     const applied = await runMigrations(pool, DEFAULT_MIGRATIONS_DIR);
+    console.log(DEFAULT_MIGRATIONS_DIR);
     if (applied === 0) {
       console.log('No pending migrations.');
     } else {
