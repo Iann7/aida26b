@@ -312,3 +312,11 @@ p[class="successOutputInfo"]{
 .invisible{
     display: none;
 }
+
+
+td:first-child, th:first-child {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

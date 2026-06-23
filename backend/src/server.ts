@@ -13,7 +13,6 @@ import { getHandler } from './routes/get';
 import { putHandler } from './routes/put';
 import { postHandler } from './routes/post';
 import { deleteHandler } from './routes/delete';
-import { get } from 'https';
 
 // Load environment variables before reading process.env
 dotenv.config();
@@ -541,17 +540,29 @@ app.delete(
   }
 );
 
-//Positions API route
-app.get('/api/positions/:vessel_mmsi', requireAuth, requirePasswordReady, async (req, res) => {
+// Obtener última posición de cada barco
+app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, res) => {
   try {
-    const vesselMmsi = req.params.vessel_mmsi;
-    const result = await pool.query('SELECT * FROM positions WHERE vessel_mmsi = $1', [vesselMmsi]);
+    const result = await pool.query(`
+      SELECT DISTINCT ON (p.vessel_id)
+        p.latitude,
+        p.longitude,
+        p.speed_knots,
+        p.heading,
+        p.recorded_at,
+        v.name as vessel_name,
+        v.mmsi
+      FROM positions p
+      JOIN vessels v ON v.id = p.vessel_id
+      ORDER BY p.vessel_id, p.recorded_at DESC
+    `);
     return res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching positions:', error);
+    console.error('Error fetching latest positions:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-})
+});
+
 // Resolve frontend static files directory
 let frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
@@ -577,88 +588,78 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
-}
- 
-// Socket connection to AISStream
-const getVesselsToTrack = async () => {
-  try {
-    const result = await pool.query(
-      `SELECT mmsi FROM vessels`
-    );
-    return result.rows.map(row => row.mmsi);
-  } catch (error) {
-    console.error('Error fetching vessels to track:', error);
-    throw error;
-  }
-};
 
-const updateVesselPosition = async (aisMessage: any) => {
-  try {
-    const mmsi = aisMessage["MetaData"]["MMSI"];
-    const lat = aisMessage["MetaData"]["latitude"];
-    const lon = aisMessage["MetaData"]["longitude"];
-    const recordedAt = new Date(Date.now()).toISOString();
+  const enableUpdater = (process.env.ENABLE_POSITION_UPDATER || 'false') === 'true';
 
-    const vessel_actual_position = await pool.query('SELECT * FROM positions WHERE vessel_mmsi = $1', [mmsi]);
+  // Por ahora descativado, ver bien como fecthear la informacion. La ides es que to corre cada cierto
+  // intervalo y actualice la tabla de positions con la info mas reciente de cada barco
+  if (false) {
+    const VESSEL_API_BASE = process.env.VESSEL_API_BASE || '';
+    const VESSEL_API_KEY = process.env.VESSEL_API_KEY || '';
+    const INTERVAL_S = parseInt(process.env.POSITION_UPDATER_INTERVAL || '60', 10);
 
-    if (vessel_actual_position.rows.length === 0) {
-      const id = crypto.randomUUID().toString();
+    async function fetchAndStorePositions(): Promise<void> {
+      try {
+        const vesselsRes = await pool.query('SELECT id, mmsi FROM vessels');
+        const vessels = vesselsRes.rows;
 
-      await pool.query(
-        `INSERT INTO positions (vessel_mmsi, latitude, longitude, recorded_at, id)
-        VALUES ($1, $2, $3, $4, $5)`,
-        [mmsi, lat, lon, recordedAt, id]
-      );
-    } else {
-      await pool.query(
-        `UPDATE positions SET latitude = $2, longitude = $3, recorded_at = $4 WHERE vessel_mmsi = $1`,
-        [mmsi, lat, lon, recordedAt]
-      );
+        for (const v of vessels) {
+          try {
+            if (!v.mmsi) continue;
+
+            const url = VESSEL_API_BASE
+              ? `${VESSEL_API_BASE.replace(/\/$/, '')}?mmsi=${encodeURIComponent(String(v.mmsi))}`
+              : '';
+
+            if (!url) continue;
+
+            const headers: Record<string, string> = {};
+            if (VESSEL_API_KEY) headers['Authorization'] = `Bearer ${VESSEL_API_KEY}`;
+
+            const resp = await fetch(url, { headers });
+
+            if (!resp.ok) {
+              console.warn(`Failed fetching vessel ${v.mmsi}: ${resp.status}`);
+              continue;
+            }
+
+            const data = await resp.json();
+
+            const latitude = data.latitude ?? data.lat ?? null;
+            const longitude = data.longitude ?? data.lon ?? data.lng ?? null;
+            const speed_knots = data.speed_knots ?? data.speed ?? null;
+            const heading = data.heading ?? data.course ?? null;
+            const recorded_at = data.recorded_at ?? data.timestamp ?? null;
+            const source = data.source ?? null;
+            const packet_id = data.packet_id ?? null;
+
+            if (latitude == null || longitude == null) continue;
+
+            await pool.query(
+              `INSERT INTO positions
+               (vessel_id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id)
+               VALUES ($1,$2,$3,$4,$5,COALESCE($6, now()),$7,$8)`,
+              [v.id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id]
+            );
+          } catch (err) {
+            console.error('Error processing vessel', v, err);
+          }
+        }
+      } catch (err) {
+        console.error('Position updater failed:', err);
+      }
     }
 
-    console.log(`Updated position for vessel ${mmsi}: (${lat}, ${lon}) at ${recordedAt}`);
-    
-  } catch (error) {
-    console.error('Error updating vessel position:', error);
-    throw error;
-  }
-}
-
-async function startAISStream() {
-  try {
-    let vessselsToTrack = [];
-
-    while (vessselsToTrack.length === 0) {
-      vessselsToTrack = await getVesselsToTrack(); 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    console.log('Starting AIS stream with vessels:');
-
-    const socket = new WebSocket((process.env.AISS_URL ?? '') + "stream");
-
-    socket.onopen = () => {
-      let message = {
-        apikey: process.env.AISS_API_KEY,
-        BoundingBoxes: [[[-90, -180], [90, 180]]],
-        FilterMessageTypes: ["PositionReport"],
-        FiltersShipMMSI: vessselsToTrack,
+    (async () => {
+      try {
+        await fetchAndStorePositions();
+      } catch (err) {
+        console.error('Initial position fetch failed:', err);
       }
 
-      socket.send(JSON.stringify(message));
-    }
-
-    socket.onmessage = async function (event) {
-      console.log("Received message:");
-      const data = await event.data.text();
-      let aisMessage = JSON.parse(data)
-  
-      await updateVesselPosition(aisMessage);
-    };
-
-  } catch (error) {
-    console.error('Error in AIS stream:', error);
+      setInterval(() => {
+        void fetchAndStorePositions();
+      }, Math.max(1000, INTERVAL_S * 1000));
+    })();
   }
 }
-
-startAISStream().catch((err) => console.error(err));
