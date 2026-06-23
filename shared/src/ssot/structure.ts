@@ -40,13 +40,13 @@ export const structure = {
         length_m: {
           type: 'number',
           input: 'number',
-          label: { es: 'Eslora (m)', en: 'Length (m)' },
+          label: { es: 'Largo (m)', en: 'Length (m)' },
           validator: { nullable: true },
         },
         width_m: {
           type: 'number',
           input: 'number',
-          label: { es: 'Manga (m)', en: 'Width (m)' },
+          label: { es: 'Ancho (m)', en: 'Width (m)' },
           validator: { nullable: true },
         },
         created_at: {
