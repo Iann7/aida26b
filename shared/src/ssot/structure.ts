@@ -21,6 +21,7 @@ export const structure = {
           type: 'string',
           label: { es: 'ID', en: 'ID' },
           readonlyOnEdit: true,
+          hidden: true,
           validator: { required: true },
         },
 

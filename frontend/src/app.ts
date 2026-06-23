@@ -17,6 +17,17 @@ import { getPkFields } from '@shared/utils/utils';
 import { validateField } from '@shared/validation/validate';
 import '../styles/style.css';
 
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import { fromLonLat } from 'ol/proj';
+import { Style, Circle as CircleStyle, Fill, Stroke, Text as OLText } from 'ol/style';
+
 const API_BASE = '/api';
 const PAGE_SIZE = 20;
 
@@ -650,37 +661,76 @@ const menu_handlers = {
     const existing = document.getElementById('map-container');
 
     if (existing) {
-      // hide map, show table and controls
       existing.remove();
       filterContainer.style.display = '';
       paginationContainer.style.display = '';
       sharedTable.style.display = '';
-    } else {
-      // hide table and controls
-      filterContainer.style.display = 'none';
-      paginationContainer.style.display = 'none';
-      sharedTable.style.display = 'none';
-
-      // create map container with an interactive OpenStreetMap iframe
-      const mapContainer = document.createElement('div');
-      mapContainer.id = 'map-container';
-      mapContainer.style.width = '100%';
-      mapContainer.style.height = '600px';
-      mapContainer.style.marginTop = '10px';
-
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.openstreetmap.org/export/embed.html?bbox=-180.0,-85.0,180.0,85.0';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.border = '0';
-
-      mapContainer.appendChild(iframe);
-
-      // insert map container where the table was
-      sharedTable.parentNode?.insertBefore(mapContainer, sharedTable);
+      return;
     }
-  }
-}
+
+    filterContainer.style.display = 'none';
+    paginationContainer.style.display = 'none';
+    sharedTable.style.display = 'none';
+
+    const container = document.createElement('div');
+    container.id = 'map-container';
+
+    const mapDiv = document.createElement('div');
+    mapDiv.id = 'map';
+    mapDiv.style.width = '100%';
+    mapDiv.style.height = '600px';
+    container.appendChild(mapDiv);
+
+    sharedTable.parentNode?.insertBefore(container, sharedTable);
+
+    const map = new Map({
+      target: 'map',
+      layers: [new TileLayer({ source: new OSM() })],
+      view: new View({ center: [0, 0], zoom: 2 }),
+    });
+
+    const markerSource = new VectorSource();
+    const markerLayer = new VectorLayer({ source: markerSource });
+    map.addLayer(markerLayer);
+
+    async function loadPositions() {
+      try {
+        const response = await fetch('/api/positions/latest');
+        if (!response.ok) return;
+        const positions = await response.json();
+
+        markerSource.clear();
+
+        positions.forEach((pos: any) => {
+          const feature = new Feature(
+            new Point(fromLonLat([pos.longitude, pos.latitude]))
+          );
+          feature.setStyle(
+            new Style({
+              image: new CircleStyle({
+                radius: 8,
+                fill: new Fill({ color: '#3388ff' }),
+                stroke: new Stroke({ color: '#fff', width: 2 }),
+              }),
+              text: new OLText({
+                text: pos.vessel_name || 'Barco',
+                offsetY: -15,
+                font: '12px sans-serif',
+                fill: new Fill({ color: '#000' }),
+                stroke: new Stroke({ color: '#fff', width: 3 }),
+              }),
+            })
+          );
+          markerSource.addFeature(feature);
+        });
+      } catch (err) {
+        console.error('Error loading positions:', err);
+      }
+    }
+
+    loadPositions();
+    setInterval(loadPositions, 10000);
+  }}
 
 function renderAnyMenuOption(key: keyof typeof structure.menu): void {
   const config = structure.menu[key];

@@ -53,6 +53,7 @@ type ColumnDef = {
   editable?: boolean;
   required?: boolean;
   readonlyOnEdit?: boolean;
+  hidden?: boolean;
   validator?: ColumnValidator;
   nullable?: boolean;
   derivable?: {originTable: string, sqlGenerationStatement: string};

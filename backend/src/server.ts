@@ -540,6 +540,29 @@ app.delete(
   }
 );
 
+// Obtener última posición de cada barco
+app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT ON (p.vessel_id)
+        p.latitude,
+        p.longitude,
+        p.speed_knots,
+        p.heading,
+        p.recorded_at,
+        v.name as vessel_name,
+        v.mmsi
+      FROM positions p
+      JOIN vessels v ON v.id = p.vessel_id
+      ORDER BY p.vessel_id, p.recorded_at DESC
+    `);
+    return res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching latest positions:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Resolve frontend static files directory
 let frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
