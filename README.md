@@ -51,15 +51,18 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 ### Base de Datos
 
 1. Setup inicial (una vez por entorno, como superusuario de Postgres):
+
    ```
    psql -U postgres -f database/bootstrap.sql
    ```
-   Esto crea los roles `aida26_owner` / `aida26_user` y la base `faculty_management`.
 
+   Esto crea los roles `aida26_owner` / `aida26_user` y la base `faculty_management`.
 2. Aplicar migraciones (desde `backend/`):
+
    ```
    npm run migrate
    ```
+
    Esto crea/actualiza las tablas según los archivos en `database/migrations/`.
 
    Las migraciones son **forward-only** y nombradas con timestamp
@@ -118,6 +121,7 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 ## API Endpoints
 
 ### Alumnos
+
 - `GET /api/students` - Listar todos los alumnos
 - `GET /api/students/:numero_libreta` - Obtener alumno específico
 - `POST /api/students` - Crear nuevo alumno
@@ -125,6 +129,7 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 - `DELETE /api/students/:numero_libreta` - Eliminar alumno
 
 ### Materias
+
 - `GET /api/subjects` - Listar todas las materias
 - `GET /api/subjects/:cod_mat` - Obtener materia específica
 - `POST /api/subjects` - Crear nueva materia
@@ -132,6 +137,7 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 - `DELETE /api/subjects/:cod_mat` - Eliminar materia
 
 ### Inscripciones
+
 - `GET /api/enrollments` - Listar todas las inscripciones
 - `GET /api/enrollments/:numero_libreta/:cod_mat` - Obtener inscripción específica
 - `POST /api/enrollments` - Crear nueva inscripción

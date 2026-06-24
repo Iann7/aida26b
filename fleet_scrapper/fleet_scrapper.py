@@ -18,9 +18,8 @@ def connect_db():
 def save_position(db_connection,message):
     if message["MessageType"] != "PositionReport":
          return
-    
     ais_message = message["Message"]["PositionReport"]
-    mmsi        = str(ais_message["userID"])
+    mmsi        = str(ais_message["UserID"])
     latitude    = ais_message["Latitude"]
     longitude   = ais_message["Longitude"]
     with db_connection.cursor() as cur:
@@ -56,16 +55,20 @@ async def connect_ais_stream(db_connection):
             await websocket.send(subscribe_message_json)
 
             async for message_json in websocket:
+                print("akjlflkdsj")
                 message = json.loads(message_json)
                 message_type = message["MessageType"]
 
                 if message_type == "PositionReport":
+                     print("===")
                      save_position(db_connection,message)
     finally:
          db_connection.close()
 
 def main():
+    print("trying to connect")
     db_connection = connect_db()
+    print("connection succesful")
     asyncio.run(connect_ais_stream(db_connection))
 if __name__ == "__main__":
     main()
