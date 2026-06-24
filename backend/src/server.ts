@@ -544,17 +544,15 @@ app.delete(
 app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT DISTINCT ON (p.vessel_id)
+      SELECT DISTINCT ON (p.vessel_mmsi)
         p.latitude,
         p.longitude,
-        p.speed_knots,
-        p.heading,
         p.recorded_at,
         v.name as vessel_name,
         v.mmsi
       FROM positions p
-      JOIN vessels v ON v.id = p.vessel_id
-      ORDER BY p.vessel_id, p.recorded_at DESC
+      JOIN vessels v ON v.mmsi = p.vessel_mmsi
+      ORDER BY p.vessel_mmsi, p.recorded_at DESC
     `);
     return res.json(result.rows);
   } catch (error) {
@@ -600,7 +598,7 @@ if (require.main === module) {
 
     async function fetchAndStorePositions(): Promise<void> {
       try {
-        const vesselsRes = await pool.query('SELECT id, mmsi FROM vessels');
+        const vesselsRes = await pool.query('SELECT mmsi FROM vessels');
         const vessels = vesselsRes.rows;
 
         for (const v of vessels) {
@@ -627,19 +625,15 @@ if (require.main === module) {
 
             const latitude = data.latitude ?? data.lat ?? null;
             const longitude = data.longitude ?? data.lon ?? data.lng ?? null;
-            const speed_knots = data.speed_knots ?? data.speed ?? null;
-            const heading = data.heading ?? data.course ?? null;
             const recorded_at = data.recorded_at ?? data.timestamp ?? null;
-            const source = data.source ?? null;
-            const packet_id = data.packet_id ?? null;
 
             if (latitude == null || longitude == null) continue;
 
             await pool.query(
               `INSERT INTO positions
-               (vessel_id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id)
-               VALUES ($1,$2,$3,$4,$5,COALESCE($6, now()),$7,$8)`,
-              [v.id, latitude, longitude, speed_knots, heading, recorded_at, source, packet_id]
+               (id, vessel_mmsi, latitude, longitude, recorded_at)
+               VALUES ($1,$2,$3,$4,COALESCE($5, now()))`,
+              [crypto.randomUUID(), v.mmsi, latitude, longitude, recorded_at]
             );
           } catch (err) {
             console.error('Error processing vessel', v, err);

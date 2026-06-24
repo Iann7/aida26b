@@ -268,17 +268,26 @@ function getJoinsStatements(
 ): string {
   let joinsStatement = "";
   const entityName = getEntityName(queryTable);
+  const columns = structure.tables[queryTable].columns as Record<string, ColumnDef>;
 
   referencedRelations.forEach((tableName) => {
     const referencedEntityName = getEntityName(tableName);
 
     joinsStatement += ` JOIN ${tableName} ${referencedEntityName} ON `;
 
-    const pkFields = getPkFields(tableName);
+    const fkFieldsEqualityStatements = Object.entries(columns)
+      .filter(([, column]) => column.foreignKey?.table === tableName)
+      .map(
+        ([fieldName, column]) =>
+          `${entityName}.${fieldName} = ${referencedEntityName}.${column.foreignKey?.valueField}`
+      );
 
-    const pkFieldsEqualityStatements = pkFields.map(
-      (pk) => `${entityName}.${pk} = ${referencedEntityName}.${pk}`
-    );
+    const pkFieldsEqualityStatements =
+      fkFieldsEqualityStatements.length > 0
+        ? fkFieldsEqualityStatements
+        : getPkFields(tableName).map(
+            (pk) => `${entityName}.${pk} = ${referencedEntityName}.${pk}`
+          );
 
     joinsStatement += pkFieldsEqualityStatements.join(" AND ");
   });

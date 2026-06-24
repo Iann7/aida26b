@@ -22,6 +22,7 @@ def save_position(db_connection,message):
     mmsi        = str(ais_message["UserID"])
     latitude    = ais_message["Latitude"]
     longitude   = ais_message["Longitude"]
+    print(f"SHIP ID: {mmsi}")
     with db_connection.cursor() as cur:
         cur.execute(
             """
@@ -55,12 +56,10 @@ async def connect_ais_stream(db_connection):
             await websocket.send(subscribe_message_json)
 
             async for message_json in websocket:
-                print("akjlflkdsj")
                 message = json.loads(message_json)
                 message_type = message["MessageType"]
 
                 if message_type == "PositionReport":
-                     print("===")
                      save_position(db_connection,message)
     finally:
          db_connection.close()

@@ -17,18 +17,11 @@ export const structure = {
   tables: {
     vessels: {
       columns: {
-        id: {
-          type: 'string',
-          label: { es: 'ID', en: 'ID' },
-          readonlyOnEdit: true,
-          hidden: true,
-          validator: { required: true },
-        },
-
         mmsi: {
-          type: 'number',
+          type: 'string',
           label: { es: 'MMSI', en: 'MMSI' },
-          validator: { nullable: true },
+          readonlyOnEdit: true,
+          validator: { required: true },
         },
 
         name: {
@@ -40,18 +33,6 @@ export const structure = {
         vessel_type: {
           type: 'string',
           label: { es: 'Tipo de Barco', en: 'Vessel Type' },
-          validator: { nullable: true },
-        },
-
-        call_sign: {
-          type: 'string',
-          label: { es: 'Call Sign', en: 'Call Sign' },
-          validator: { nullable: true },
-        },
-
-        imo: {
-          type: 'number',
-          label: { es: 'IMO', en: 'IMO' },
           validator: { nullable: true },
         },
 
@@ -82,7 +63,7 @@ export const structure = {
           validator: { nullable: true },
         },
       },
-      pk: 'id',
+      pk: 'mmsi',
       uiName: { es: 'Barco', en: 'Vessel' },
       title: { es: 'Barcos', en: 'Vessels' },
       addButtonLabel: { es: 'Agregar Barco', en: 'Add Vessel' },
@@ -152,15 +133,15 @@ export const structure = {
           readonlyOnEdit: true,
           validator: { required: true },
         },
-        vessel_id: {
+        vessel_mmsi: {
           type: 'string',
           label: { es: 'Barco', en: 'Vessel' },
           input: 'select',
           validator: { nullable: true },
           foreignKey: {
             table: 'vessels',
-            valueField: 'id',
-            labelField: 'name',
+            valueField: 'mmsi',
+            labelField: 'mmsi',
           },
         },
         packet_type: {
@@ -174,22 +155,9 @@ export const structure = {
           label: { es: 'Seq', en: 'Sequence' },
           validator: { nullable: true },
         },
-        received_at: {
-          type: 'string',
-          input: 'date',
-          label: { es: 'Recibido', en: 'Received At' },
-          validator: { nullable: true },
-        },
         source: {
           type: 'string',
           label: { es: 'Fuente', en: 'Source' },
-          validator: { nullable: true },
-        },
-        // position fields removed: positions are stored in `positions` table
-        payload: {
-          type: 'string',
-          input: 'textarea',
-          label: { es: 'Payload (JSON)', en: 'Payload (JSON)' },
           validator: { nullable: true },
         },
         created_at: {
