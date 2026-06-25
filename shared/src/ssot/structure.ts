@@ -124,55 +124,6 @@ export const structure = {
       title: { es: 'Regiones', en: 'Regions' },
       addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
     } satisfies TableStructure,
-
-    packets: {
-      columns: {
-        id: {
-          type: 'string',
-          label: { es: 'ID', en: 'ID' },
-          readonlyOnEdit: true,
-          validator: { required: true },
-        },
-        vessel_mmsi: {
-          type: 'string',
-          label: { es: 'Barco', en: 'Vessel' },
-          input: 'select',
-          validator: { nullable: true },
-          foreignKey: {
-            table: 'vessels',
-            valueField: 'mmsi',
-            labelField: 'mmsi',
-          },
-        },
-        packet_type: {
-          type: 'string',
-          label: { es: 'Tipo de Paquete', en: 'Packet Type' },
-          validator: { nullable: true },
-        },
-        sequence_number: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Seq', en: 'Sequence' },
-          validator: { nullable: true },
-        },
-        source: {
-          type: 'string',
-          label: { es: 'Fuente', en: 'Source' },
-          validator: { nullable: true },
-        },
-        created_at: {
-          type: 'string',
-          input: 'date',
-          label: { es: 'Creado', en: 'Created At' },
-          validator: { nullable: true },
-        },
-      },
-      pk: 'id',
-      uiName: { es: 'Paquete', en: 'Packet' },
-      title: { es: 'Paquetes', en: 'Packets' },
-      addButtonLabel: { es: 'Agregar Paquete', en: 'Add Packet' },
-      referencedTables: ['vessels'],
-    } satisfies TableStructure
   },
 
   menu: {
