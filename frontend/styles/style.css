@@ -159,6 +159,22 @@ button:hover {
     gap: 8px;
 }
 
+.flag-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.flag-icon {
+    width: 24px;
+    height: 18px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background-color: var(--surface-2);
+}
+
 .edit-btn {
     background-color: var(--success);
     color: white;

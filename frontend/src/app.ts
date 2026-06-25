@@ -87,6 +87,7 @@ const currentUserEl = document.getElementById('current-user') as HTMLElement;
 const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
 const statusMessage = document.getElementById('status-message') as HTMLElement;
 
+const recordsSection = document.getElementById('records-section') as HTMLElement;
 const viewTitle = document.getElementById('view-title') as HTMLElement;
 const addRecordBtn = document.getElementById('add-record-btn') as HTMLButtonElement;
 const adminActions = document.getElementById('admin-actions') as HTMLElement;
@@ -270,6 +271,127 @@ async function errorMessage(response: globalThis.Response): Promise<string> {
   }
 
   return `Error ${response.status}`;
+}
+
+// -----------------------------------------------------------------------------
+// Display helpers
+// -----------------------------------------------------------------------------
+
+const countryNameToCode: Record<string, string> = {
+  argentina: 'AR',
+  brazil: 'BR',
+  brasil: 'BR',
+  chile: 'CL',
+  uruguay: 'UY',
+  paraguay: 'PY',
+  bolivia: 'BO',
+  peru: 'PE',
+  'united states': 'US',
+  usa: 'US',
+  'estados unidos': 'US',
+  canada: 'CA',
+  spain: 'ES',
+  españa: 'ES',
+  france: 'FR',
+  francia: 'FR',
+  germany: 'DE',
+  alemania: 'DE',
+  italy: 'IT',
+  italia: 'IT',
+  'united kingdom': 'GB',
+  uk: 'GB',
+  'reino unido': 'GB',
+  china: 'CN',
+  japan: 'JP',
+  japon: 'JP',
+  panama: 'PA',
+  panamá: 'PA',
+  liberia: 'LR',
+  malta: 'MT',
+  'marshall islands': 'MH',
+  'islas marshall': 'MH',
+  bahamas: 'BS',
+  cyprus: 'CY',
+  chipre: 'CY',
+  singapore: 'SG',
+  singapur: 'SG',
+};
+
+function countryCode(rawValue: unknown): string {
+  if (rawValue == null || rawValue === '') return '';
+
+  const value = String(rawValue).trim();
+  return (
+    /^[A-Za-z]{2}$/.test(value)
+      ? value
+      : countryNameToCode[value.toLowerCase()] ?? ''
+  ).toUpperCase();
+}
+
+function formatTableCell(fieldName: string, rawValue: unknown): string {
+  if (rawValue == null) return '';
+
+  if (fieldName === 'flag_country') {
+    return countryCode(rawValue) || String(rawValue);
+  }
+
+  if (
+    fieldName === 'latest_latitude' ||
+    fieldName === 'latest_longitude' ||
+    fieldName === 'length_m' ||
+    fieldName === 'width_m'
+  ) {
+    const value = Number(rawValue);
+    return Number.isFinite(value) ? String(Number(value.toFixed(6))) : String(rawValue);
+  }
+
+  if (fieldName === 'latest_position_at') {
+    const date = new Date(String(rawValue));
+    return Number.isNaN(date.getTime()) ? String(rawValue) : date.toLocaleString();
+  }
+
+  return String(rawValue);
+}
+
+function appendFlagCellContent(td: HTMLTableCellElement, rawValue: unknown): void {
+  const code = countryCode(rawValue);
+
+  if (!code) {
+    td.textContent = rawValue == null ? '' : String(rawValue);
+    return;
+  }
+
+  const wrapper = document.createElement('span');
+  wrapper.className = 'flag-cell';
+
+  const img = document.createElement('img');
+  img.className = 'flag-icon';
+  img.src = `https://flagcdn.com/24x18/${code.toLowerCase()}.png`;
+  img.alt = code;
+  img.loading = 'lazy';
+  img.addEventListener('error', () => {
+    img.remove();
+  });
+
+  const label = document.createElement('span');
+  label.textContent = code;
+
+  wrapper.appendChild(img);
+  wrapper.appendChild(label);
+  td.appendChild(wrapper);
+}
+
+function renderTableCell(
+  td: HTMLTableCellElement,
+  fieldName: string,
+  rawValue: unknown
+): void {
+  if (fieldName === 'flag_country') {
+    appendFlagCellContent(td, rawValue);
+    return;
+  }
+
+  td.textContent = formatTableCell(fieldName, rawValue);
 }
 
 // -----------------------------------------------------------------------------
@@ -523,10 +645,7 @@ function openVesselMap(): void {
   mapDiv.style.height = '600px';
   container.appendChild(mapDiv);
 
-  sharedTable.parentNode?.insertBefore(
-    container,
-    vesselMapControlsContainer ?? sharedTable
-  );
+  recordsSection.insertBefore(container, viewTitle);
 
   vesselMap = new Map({
     target: 'map',
@@ -809,7 +928,8 @@ function showSection(section: TableKey, pushState = true): void {
     getLocalizedText(tableConfig.addButtonLabel) ||
     `${getLocalizedText(structure.commonText.add)} ${getLocalizedText(tableConfig.uiName)}`;
 
-  addRecordBtn.style.display = canWriteAcademic() ? 'inline-block' : 'none';
+  addRecordBtn.style.display =
+    canWriteAcademic() && section !== 'vessels' ? 'inline-block' : 'none';
 
   if (adminActions) {
     adminActions.hidden = currentUser?.role !== 'admin';
@@ -1054,7 +1174,7 @@ function renderAnyTable<K extends TableKey>(
 
     columnNames.forEach((name) => {
       const td = document.createElement('td');
-      td.textContent = String(record[name] ?? '');
+      renderTableCell(td, name, record[name]);
       row.appendChild(td);
     });
 

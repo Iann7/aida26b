@@ -42,6 +42,44 @@ export const structure = {
           validator: { nullable: true },
         },
 
+        latest_latitude: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Latitud', en: 'Latitude' },
+          editable: false,
+          validator: { nullable: true },
+          derivable: {
+            originTable: 'vessels',
+            sqlGenerationStatement:
+              '(SELECT p.latitude FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
+          },
+        },
+
+        latest_longitude: {
+          type: 'number',
+          input: 'number',
+          label: { es: 'Longitud', en: 'Longitude' },
+          editable: false,
+          validator: { nullable: true },
+          derivable: {
+            originTable: 'vessels',
+            sqlGenerationStatement:
+              '(SELECT p.longitude FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
+          },
+        },
+
+        latest_position_at: {
+          type: 'string',
+          label: { es: 'Última Posición', en: 'Last Position' },
+          editable: false,
+          validator: { nullable: true },
+          derivable: {
+            originTable: 'vessels',
+            sqlGenerationStatement:
+              '(SELECT p.recorded_at FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
+          },
+        },
+
         length_m: {
           type: 'number',
           input: 'number',
