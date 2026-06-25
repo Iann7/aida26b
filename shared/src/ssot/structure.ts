@@ -208,6 +208,8 @@ export const structure = {
     remove: { es: 'Remover', en: 'Remove' },
     addAllVessels: { es: 'Agregar todos los barcos', en: 'Add all vessels' },
     removeAllVessels: { es: 'Remover todos los barcos', en: 'Remove all vessels' },
+    addAllMapVessels: { es: 'Agregar todos al mapa', en: 'Add all to map' },
+    removeAllMapVessels: { es: 'Remover todos del mapa', en: 'Remove all from map' },
     update: { es: 'Actualizar', en: 'Update' },
     login: { es: 'Ingresar', en: 'Login' },
     password: { es: 'Contraseña', en: 'Password' },

@@ -811,17 +811,36 @@ function toggleVesselOnMap(mmsi: string): void {
   void refreshVesselMapMarkers();
 }
 
-function setListedVesselsOnMap(selected: boolean): void {
-  listedVesselMmsis.forEach((mmsi) => {
-    if (selected) {
-      mapVesselMmsis.add(mmsi);
-    } else {
-      mapVesselMmsis.delete(mmsi);
-    }
-  });
+async function setAllPositionedVesselsOnMap(selected: boolean): Promise<void> {
+  try {
+    const positions = await fetchLatestVesselPositions();
 
-  syncVesselMapButtons();
-  void refreshVesselMapMarkers();
+    positions.forEach((position) => {
+      const mmsi = String(position.mmsi);
+
+      if (!mmsi) return;
+
+      if (selected) {
+        mapVesselMmsis.add(mmsi);
+      } else {
+        mapVesselMmsis.delete(mmsi);
+      }
+    });
+
+    syncVesselMapButtons();
+    await refreshVesselMapMarkers();
+  } catch (err) {
+    console.error('Error toggling all positioned vessels:', err);
+  }
+}
+
+function areAllPositionedVesselsOnMap(): boolean {
+  return (
+    latestVesselPositions.length > 0 &&
+    latestVesselPositions.every((position) =>
+      mapVesselMmsis.has(String(position.mmsi))
+    )
+  );
 }
 
 function renderVesselMapControls(): void {
@@ -832,22 +851,19 @@ function renderVesselMapControls(): void {
 
   if (activeTableKey !== 'vessels' || listedVesselMmsis.length === 0) return;
 
-  const allListedOnMap = listedVesselMmsis.every((mmsi) =>
-    mapVesselMmsis.has(mmsi)
+  const allPositionedOnMap = areAllPositionedVesselsOnMap();
+  const toggleAllPagesBtn = document.createElement('button');
+  toggleAllPagesBtn.className = allPositionedOnMap ? 'delete-btn' : 'add-btn';
+  toggleAllPagesBtn.textContent = getLocalizedText(
+    allPositionedOnMap
+      ? structure.commonText.removeAllMapVessels
+      : structure.commonText.addAllMapVessels
   );
-
-  const toggleAllBtn = document.createElement('button');
-  toggleAllBtn.className = allListedOnMap ? 'delete-btn' : 'edit-btn';
-  toggleAllBtn.textContent = getLocalizedText(
-    allListedOnMap
-      ? structure.commonText.removeAllVessels
-      : structure.commonText.addAllVessels
-  );
-  toggleAllBtn.addEventListener('click', () => {
-    setListedVesselsOnMap(!allListedOnMap);
+  toggleAllPagesBtn.addEventListener('click', () => {
+    void setAllPositionedVesselsOnMap(!allPositionedOnMap);
   });
 
-  vesselMapControlsContainer.appendChild(toggleAllBtn);
+  vesselMapControlsContainer.appendChild(toggleAllPagesBtn);
 }
 
 function serializeFilterValue(fieldName: string, entry: FilterEntry): string | null {
@@ -1224,6 +1240,7 @@ function renderAnyTable<K extends TableKey>(
 
     th.textContent = getLocalizedText(column.label as LocalizedText | string) || fieldName;
     th.className = 'sortable';
+    th.dataset.field = fieldName;
     th.title = 'Click to sort';
 
     if (currentState.sort === fieldName) {
@@ -1249,6 +1266,7 @@ function renderAnyTable<K extends TableKey>(
   if (showActions) {
     const actionsHeader = document.createElement('th');
     actionsHeader.textContent = getLocalizedText(structure.commonText.actions);
+    actionsHeader.className = 'actions-header';
     headerRow.appendChild(actionsHeader);
   }
 
@@ -1276,6 +1294,7 @@ function renderAnyTable<K extends TableKey>(
 
     columnNames.forEach((name) => {
       const td = document.createElement('td');
+      td.dataset.field = name;
       renderTableCell(td, name, record[name]);
       row.appendChild(td);
     });
