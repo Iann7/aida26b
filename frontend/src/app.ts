@@ -424,9 +424,20 @@ let currentState: TableState = {
 
 const mapVesselMmsis = new Set<string>();
 let listedVesselMmsis: string[] = [];
+let vesselMap: Map | null = null;
 let vesselMapMarkerSource: VectorSource | null = null;
 let vesselMapInterval: ReturnType<typeof setInterval> | null = null;
 let vesselMapControlsContainer: HTMLDivElement | null = null;
+
+type LatestVesselPosition = {
+  latitude: string | number;
+  longitude: string | number;
+  recorded_at?: string;
+  vessel_name?: string | null;
+  mmsi: string | number;
+};
+
+let latestVesselPositions: LatestVesselPosition[] = [];
 
 function getVesselMapActionLabel(mmsi: string): string {
   return getLocalizedText(
@@ -451,6 +462,14 @@ function syncVesselMapButtons(): void {
   renderVesselMapControls();
 }
 
+async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
+  const response = await apiFetch('/positions/latest');
+  if (!response.ok) return latestVesselPositions;
+
+  latestVesselPositions = (await response.json()) as LatestVesselPosition[];
+  return latestVesselPositions;
+}
+
 async function refreshVesselMapMarkers(): Promise<void> {
   if (!vesselMapMarkerSource) return;
 
@@ -459,10 +478,7 @@ async function refreshVesselMapMarkers(): Promise<void> {
   if (mapVesselMmsis.size === 0) return;
 
   try {
-    const response = await apiFetch('/positions/latest');
-    if (!response.ok) return;
-
-    const positions = await response.json();
+    const positions = await fetchLatestVesselPositions();
 
     positions
       .filter((pos: any) => mapVesselMmsis.has(String(pos.mmsi)))
@@ -492,6 +508,74 @@ async function refreshVesselMapMarkers(): Promise<void> {
       });
   } catch (err) {
     console.error('Error loading positions:', err);
+  }
+}
+
+function openVesselMap(): void {
+  if (document.getElementById('map-container')) return;
+
+  const container = document.createElement('div');
+  container.id = 'map-container';
+
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'map';
+  mapDiv.style.width = '100%';
+  mapDiv.style.height = '600px';
+  container.appendChild(mapDiv);
+
+  sharedTable.parentNode?.insertBefore(
+    container,
+    vesselMapControlsContainer ?? sharedTable
+  );
+
+  vesselMap = new Map({
+    target: 'map',
+    layers: [new TileLayer({ source: new OSM() })],
+    view: new View({ center: [0, 0], zoom: 2 }),
+  });
+
+  vesselMapMarkerSource = new VectorSource();
+  const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
+  vesselMap.addLayer(markerLayer);
+
+  void refreshVesselMapMarkers();
+  vesselMapInterval = setInterval(refreshVesselMapMarkers, 10000);
+}
+
+function closeVesselMap(): void {
+  document.getElementById('map-container')?.remove();
+  vesselMap = null;
+  vesselMapMarkerSource = null;
+
+  if (vesselMapInterval) {
+    clearInterval(vesselMapInterval);
+    vesselMapInterval = null;
+  }
+}
+
+async function zoomToVesselOnMap(mmsi: string): Promise<void> {
+  if (!mmsi) return;
+
+  openVesselMap();
+
+  try {
+    const positions = await fetchLatestVesselPositions();
+    const position = positions.find((pos) => String(pos.mmsi) === mmsi);
+
+    if (!position || !vesselMap) return;
+
+    const longitude = Number(position.longitude);
+    const latitude = Number(position.latitude);
+
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
+
+    vesselMap.getView().animate({
+      center: fromLonLat([longitude, latitude]),
+      zoom: 8,
+      duration: 450,
+    });
+  } catch (err) {
+    console.error('Error zooming to vessel:', err);
   }
 }
 
@@ -782,40 +866,11 @@ const menu_handlers = {
     const existing = document.getElementById('map-container');
 
     if (existing) {
-      existing.remove();
-      vesselMapMarkerSource = null;
-
-      if (vesselMapInterval) {
-        clearInterval(vesselMapInterval);
-        vesselMapInterval = null;
-      }
-
+      closeVesselMap();
       return;
     }
 
-    const container = document.createElement('div');
-    container.id = 'map-container';
-
-    const mapDiv = document.createElement('div');
-    mapDiv.id = 'map';
-    mapDiv.style.width = '100%';
-    mapDiv.style.height = '600px';
-    container.appendChild(mapDiv);
-
-    sharedTable.parentNode?.insertBefore(container, sharedTable);
-
-    const map = new Map({
-      target: 'map',
-      layers: [new TileLayer({ source: new OSM() })],
-      view: new View({ center: [0, 0], zoom: 2 }),
-    });
-
-    vesselMapMarkerSource = new VectorSource();
-    const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
-    map.addLayer(markerLayer);
-
-    void refreshVesselMapMarkers();
-    vesselMapInterval = setInterval(refreshVesselMapMarkers, 10000);
+    openVesselMap();
   }}
 
 function renderAnyMenuOption(key: keyof typeof structure.menu): void {
@@ -986,6 +1041,16 @@ function renderAnyTable<K extends TableKey>(
     const columnNames = Object.keys(tableStructure.columns) as Array<
       keyof TableRecordMap[K] & string
     >;
+    const vesselMmsi = isVesselsTable
+      ? String((record as { mmsi?: unknown }).mmsi ?? '')
+      : '';
+
+    if (vesselMmsi) {
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', () => {
+        void zoomToVesselOnMap(vesselMmsi);
+      });
+    }
 
     columnNames.forEach((name) => {
       const td = document.createElement('td');
@@ -1002,15 +1067,15 @@ function renderAnyTable<K extends TableKey>(
       );
 
       if (isVesselsTable) {
-        const mmsi = String((record as { mmsi?: unknown }).mmsi ?? '');
         const mapToggleBtn = document.createElement('button');
-        const isOnMap = mapVesselMmsis.has(mmsi);
+        const isOnMap = mapVesselMmsis.has(vesselMmsi);
 
         mapToggleBtn.className = isOnMap ? 'delete-btn' : 'edit-btn';
-        mapToggleBtn.textContent = getVesselMapActionLabel(mmsi);
-        mapToggleBtn.dataset.vesselMapMmsi = mmsi;
-        mapToggleBtn.addEventListener('click', () => {
-          toggleVesselOnMap(mmsi);
+        mapToggleBtn.textContent = getVesselMapActionLabel(vesselMmsi);
+        mapToggleBtn.dataset.vesselMapMmsi = vesselMmsi;
+        mapToggleBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          toggleVesselOnMap(vesselMmsi);
         });
 
         actionsTd.appendChild(mapToggleBtn);
