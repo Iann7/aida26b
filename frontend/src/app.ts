@@ -353,11 +353,11 @@ function formatTableCell(fieldName: string, rawValue: unknown): string {
   return String(rawValue);
 }
 
-function appendFlagCellContent(td: HTMLTableCellElement, rawValue: unknown): void {
+function appendFlagContent(container: HTMLElement, rawValue: unknown): void {
   const code = countryCode(rawValue);
 
   if (!code) {
-    td.textContent = rawValue == null ? '' : String(rawValue);
+    container.textContent = rawValue == null ? '' : String(rawValue);
     return;
   }
 
@@ -378,7 +378,7 @@ function appendFlagCellContent(td: HTMLTableCellElement, rawValue: unknown): voi
 
   wrapper.appendChild(img);
   wrapper.appendChild(label);
-  td.appendChild(wrapper);
+  container.appendChild(wrapper);
 }
 
 function renderTableCell(
@@ -387,7 +387,7 @@ function renderTableCell(
   rawValue: unknown
 ): void {
   if (fieldName === 'flag_country') {
-    appendFlagCellContent(td, rawValue);
+    appendFlagContent(td, rawValue);
     return;
   }
 
@@ -597,9 +597,11 @@ async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
   return latestVesselPositions;
 }
 
-function vesselTooltipRows(position: LatestVesselPosition): Array<[string, string]> {
+type VesselTooltipRow = [string, string | HTMLElement];
+
+function vesselTooltipRows(position: LatestVesselPosition): VesselTooltipRow[] {
   const columns = structure.tables.vessels.columns;
-  const rows: Array<[string, string]> = [
+  const rows: VesselTooltipRow[] = [
     [getLocalizedText(columns.mmsi.label), String(position.mmsi)],
   ];
 
@@ -609,7 +611,10 @@ function vesselTooltipRows(position: LatestVesselPosition): Array<[string, strin
     rows.push([getLocalizedText(columns.vessel_type.label), String(position.vessel_type)]);
   }
   if (position.flag_country) {
-    rows.push([getLocalizedText(columns.flag_country.label), formatTableCell('flag_country', position.flag_country)]);
+    const flagValue = document.createElement('span');
+    flagValue.className = 'map-tooltip-flag';
+    appendFlagContent(flagValue, position.flag_country);
+    rows.push([getLocalizedText(columns.flag_country.label), flagValue]);
   }
 
   rows.push([
@@ -652,7 +657,12 @@ function showVesselMapTooltip(position: LatestVesselPosition, pixel: [number, nu
 
     const valueEl = document.createElement('span');
     valueEl.className = 'map-tooltip-value';
-    valueEl.textContent = value;
+
+    if (typeof value === 'string') {
+      valueEl.textContent = value;
+    } else {
+      valueEl.appendChild(value);
+    }
 
     row.appendChild(labelEl);
     row.appendChild(valueEl);
@@ -754,6 +764,24 @@ function openVesselMap(): void {
 
     mapDiv.style.cursor = 'pointer';
     showVesselMapTooltip(position, event.pixel as [number, number]);
+  });
+
+  vesselMap.on('click', (event) => {
+    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
+    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
+
+    if (!position || !vesselMap) return;
+
+    const longitude = Number(position.longitude);
+    const latitude = Number(position.latitude);
+
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
+
+    vesselMap.getView().animate({
+      center: fromLonLat([longitude, latitude]),
+      zoom: Math.max(vesselMap.getView().getZoom() ?? 2, 9),
+      duration: 450,
+    });
   });
 
   mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
