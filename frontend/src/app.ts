@@ -550,6 +550,7 @@ let vesselMap: Map | null = null;
 let vesselMapMarkerSource: VectorSource | null = null;
 let vesselMapInterval: ReturnType<typeof setInterval> | null = null;
 let vesselMapControlsContainer: HTMLDivElement | null = null;
+let vesselMapTooltip: HTMLDivElement | null = null;
 
 type LatestVesselPosition = {
   latitude: string | number;
@@ -557,6 +558,10 @@ type LatestVesselPosition = {
   recorded_at?: string;
   vessel_name?: string | null;
   mmsi: string | number;
+  vessel_type?: string | null;
+  flag_country?: string | null;
+  length_m?: string | number | null;
+  width_m?: string | number | null;
 };
 
 let latestVesselPositions: LatestVesselPosition[] = [];
@@ -592,6 +597,79 @@ async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
   return latestVesselPositions;
 }
 
+function vesselTooltipRows(position: LatestVesselPosition): Array<[string, string]> {
+  const columns = structure.tables.vessels.columns;
+  const rows: Array<[string, string]> = [
+    [getLocalizedText(columns.mmsi.label), String(position.mmsi)],
+  ];
+
+  const name = position.vessel_name || '';
+  if (name) rows.push([getLocalizedText(columns.name.label), name]);
+  if (position.vessel_type) {
+    rows.push([getLocalizedText(columns.vessel_type.label), String(position.vessel_type)]);
+  }
+  if (position.flag_country) {
+    rows.push([getLocalizedText(columns.flag_country.label), formatTableCell('flag_country', position.flag_country)]);
+  }
+
+  rows.push([
+    getLocalizedText(columns.latest_latitude.label),
+    formatTableCell('latest_latitude', position.latitude),
+  ]);
+  rows.push([
+    getLocalizedText(columns.latest_longitude.label),
+    formatTableCell('latest_longitude', position.longitude),
+  ]);
+
+  if (position.length_m != null) {
+    rows.push([getLocalizedText(columns.length_m.label), formatTableCell('length_m', position.length_m)]);
+  }
+  if (position.width_m != null) {
+    rows.push([getLocalizedText(columns.width_m.label), formatTableCell('width_m', position.width_m)]);
+  }
+  if (position.recorded_at) {
+    rows.push([
+      getLocalizedText(columns.latest_position_at.label),
+      formatTableCell('latest_position_at', position.recorded_at),
+    ]);
+  }
+
+  return rows;
+}
+
+function showVesselMapTooltip(position: LatestVesselPosition, pixel: [number, number]): void {
+  if (!vesselMapTooltip) return;
+
+  vesselMapTooltip.innerHTML = '';
+
+  vesselTooltipRows(position).forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.className = 'map-tooltip-row';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'map-tooltip-label';
+    labelEl.textContent = label;
+
+    const valueEl = document.createElement('span');
+    valueEl.className = 'map-tooltip-value';
+    valueEl.textContent = value;
+
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    vesselMapTooltip?.appendChild(row);
+  });
+
+  vesselMapTooltip.style.left = `${pixel[0] + 14}px`;
+  vesselMapTooltip.style.top = `${pixel[1] + 14}px`;
+  vesselMapTooltip.hidden = false;
+}
+
+function hideVesselMapTooltip(): void {
+  if (vesselMapTooltip) {
+    vesselMapTooltip.hidden = true;
+  }
+}
+
 async function refreshVesselMapMarkers(): Promise<void> {
   if (!vesselMapMarkerSource) return;
 
@@ -608,6 +686,8 @@ async function refreshVesselMapMarkers(): Promise<void> {
         const feature = new Feature(
           new Point(fromLonLat([pos.longitude, pos.latitude]))
         );
+
+        feature.set('vesselPosition', pos);
 
         feature.setStyle(
           new Style({
@@ -645,6 +725,11 @@ function openVesselMap(): void {
   mapDiv.style.height = '600px';
   container.appendChild(mapDiv);
 
+  vesselMapTooltip = document.createElement('div');
+  vesselMapTooltip.className = 'map-vessel-tooltip';
+  vesselMapTooltip.hidden = true;
+  container.appendChild(vesselMapTooltip);
+
   recordsSection.insertBefore(container, viewTitle);
 
   vesselMap = new Map({
@@ -657,6 +742,22 @@ function openVesselMap(): void {
   const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
   vesselMap.addLayer(markerLayer);
 
+  vesselMap.on('pointermove', (event) => {
+    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
+    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
+
+    if (!position) {
+      hideVesselMapTooltip();
+      mapDiv.style.cursor = '';
+      return;
+    }
+
+    mapDiv.style.cursor = 'pointer';
+    showVesselMapTooltip(position, event.pixel as [number, number]);
+  });
+
+  mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
+
   void refreshVesselMapMarkers();
   vesselMapInterval = setInterval(refreshVesselMapMarkers, 10000);
 }
@@ -665,6 +766,7 @@ function closeVesselMap(): void {
   document.getElementById('map-container')?.remove();
   vesselMap = null;
   vesselMapMarkerSource = null;
+  vesselMapTooltip = null;
 
   if (vesselMapInterval) {
     clearInterval(vesselMapInterval);
