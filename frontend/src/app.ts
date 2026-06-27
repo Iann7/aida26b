@@ -880,6 +880,24 @@ function areAllPositionedVesselsOnMap(): boolean {
   );
 }
 
+function areAllPageVesselsOnMap(): boolean {
+  if (listedVesselMmsis.length === 0) return false;
+  return listedVesselMmsis.every((mmsi) => mapVesselMmsis.has(mmsi));
+}
+
+function setPageVesselsOnMap(selected: boolean): void {
+  listedVesselMmsis.forEach((mmsi) => {
+    if (selected) {
+      mapVesselMmsis.add(mmsi);
+    } else {
+      mapVesselMmsis.delete(mmsi);
+    }
+  });
+  syncVesselMapButtons();
+  void refreshVesselMapMarkers();
+}
+
+
 function renderVesselMapControls(): void {
   if (!vesselMapControlsContainer) return;
 
@@ -901,6 +919,19 @@ function renderVesselMapControls(): void {
   });
 
   vesselMapControlsContainer.appendChild(toggleAllPagesBtn);
+
+  const allPageOnMap = areAllPageVesselsOnMap();
+  const togglePageBtn = document.createElement('button');
+  togglePageBtn.className = allPageOnMap ? 'delete-btn' : 'add-btn';
+  togglePageBtn.textContent = getLocalizedText(
+    allPageOnMap
+      ? structure.commonText.removePageMapVessels
+      : structure.commonText.addPageMapVessels
+  );
+  togglePageBtn.addEventListener('click', () => {
+    setPageVesselsOnMap(!allPageOnMap);
+  });
+  vesselMapControlsContainer.appendChild(togglePageBtn);
 }
 
 function serializeFilterValue(fieldName: string, entry: FilterEntry): string | null {
