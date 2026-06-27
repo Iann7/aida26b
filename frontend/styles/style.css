@@ -1,55 +1,46 @@
 :root {
-    /* =============================================
-       TEMA CLARO MARÍTIMO (Light Mode)
-       Paleta: Océano/Cielo/Arena
-       ============================================= */
 
-    /* --- Fondos --- */
-    --bg: #F4F8FB;                /* Fondo general (mar en calma) */
-    --surface: #FFFFFF;           /* Tarjetas, tablas y paneles */
-    --surface-2: #FDFBF7;         /* Fondos de formularios (arena) */
-    --surface-3: #E8EEF3;         /* Hover de botones de navegación */
+    --bg: #F4F8FB;                
+    --surface: #FFFFFF;           
+    --surface-2: #FDFBF7;         
+    --surface-3: #E8EEF3;         
+   
+    --text: #1B2A3B;              
+    --text-muted: #4A6378;        
 
-    /* --- Textos --- */
-    --text: #1B2A3B;              /* Texto principal (azul petróleo) */
-    --text-muted: #4A6378;        /* Texto secundario y metadata */
+    --border: #D3E0E8;            
 
-    /* --- Bordes --- */
-    --border: #D3E0E8;            /* Espuma de mar */
+    --primary: #1E7A8C;           
+    --primary-hover: #166473;    
 
-    /* --- Acentos (Botones/enlaces) --- */
-    --primary: #1E7A8C;           /* Cian profundo (océano) */
-    --primary-hover: #166473;     /* Cian más oscuro al pasar el ratón */
-
-    /* --- Estados (Éxito/Peligro) --- */
-    --success: #27AE60;           /* Verde ancla (fondeado) */
+    --success: #27AE60;           
     --success-hover: #1B9C6B;
-    --danger: #EB5757;            /* Rojo restringido (peligro) */
+    --danger: #EB5757;            
     --danger-hover: #D94B5F;
 
-    /* --- Secundarios --- */
-    --secondary: #5D7A9E;         /* Gris azulado */
+    
+    --secondary: #5D7A9E;        
     --secondary-hover: #4A6585;
 
-    /* --- Sombras y anillos --- */
-    --shadow: 0 4px 20px rgba(30, 122, 140, 0.08); /* Sombra acuática */
+    
+    --shadow: 0 4px 20px rgba(30, 122, 140, 0.08); 
     --focus-ring: 0 0 0 3px rgba(30, 122, 140, 0.25);
 
-    /* --- Fondos dinámicos para Body y Container --- */
+
     --bg-gradient: linear-gradient(145deg, #E3EEF5 0%, #F4F8FB 100%);
     --container-bg: rgba(255, 255, 255, 0.85);
 
-    --nav-btn-bg: rgba(255, 255, 255, 0.85);      /* Fondo claro para botones de navegación */
-    --nav-btn-hover-bg: #D3E0E8;                  /* Hover más oscuro */
-    --nav-btn-active-bg: rgba(30, 122, 140, 0.15); /* Activo con acento */
+    --nav-btn-bg: rgba(255, 255, 255, 0.85);      
+    --nav-btn-hover-bg: #D3E0E8;                  
+    --nav-btn-active-bg: rgba(30, 122, 140, 0.15); 
     --nav-btn-border: #B0C4D8;
 
-    --input-bg: #FFFFFF;                          /* Fondo blanco para inputs */
-    --input-text: #1B2A3B;                        /* Texto oscuro */
+    --input-bg: #FFFFFF;                          
+    --input-text: #1B2A3B;                        
     --input-border: #D3E0E8;
 
-    --th-bg: #E8EEF3;                             /* Fondo de cabeceras de tabla */
-    --th-text: #1B2A3B;                           /* Texto oscuro */
+    --th-bg: #E8EEF3;                            
+    --th-text: #1B2A3B;                           
 
     --topbar-bg: rgba(255, 255, 255, 0.7); 
 
@@ -84,18 +75,17 @@
     --bg-gradient: radial-gradient(circle at top left, rgba(47, 128, 237, 0.18), transparent 34rem), linear-gradient(180deg, #0a1627 0%, var(--bg) 42%, #050b14 100%);
     --container-bg: rgba(15, 29, 46, 0.94);
 
-    --nav-btn-bg: rgba(21, 38, 58, 0.92);         /* Fondo oscuro (el que tenías fijo) */
+    --nav-btn-bg: rgba(21, 38, 58, 0.92);         
     --nav-btn-hover-bg: #19304b;
     --nav-btn-active-bg: rgba(47, 128, 237, 0.18);
     --nav-btn-border: var(--border);
 
-    --input-bg: #0b1625;                          /* Fondo oscuro (el que tenías fijo) */
-    --input-text: #edf4fb;                        /* Texto claro */
+    --input-bg: #0b1625;                          
+    --input-text: #edf4fb;                       
     --input-border: var(--border);
 
-    --th-bg: #122238;                             /* Fondo oscuro (el que tenías) */
-    --th-text: #d8e6f5;                           /* Texto claro */
-
+    --th-bg: #122238;                             
+    --th-text: #d8e6f5;                           
     --topbar-bg: rgba(11, 22, 37, 0.72);
 
     --nav-btn-active-text: #ffffff;
@@ -106,6 +96,8 @@ body {
     margin: 0;
     min-height: 100vh;
     padding: 24px;
+
+    font-family: 'Lato', 'Segoe UI', Arial, sans-serif;
 
    
     background: var(--bg-gradient);
@@ -142,15 +134,25 @@ h1 {
     text-align: left;
     margin: 0 0 24px;
     font-size: 1.65rem;
-    font-weight: 650;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
 }
 
 h2 {
     margin: 18px 0 14px;
     color: var(--text);
     font-size: 1.25rem;
-    font-weight: 650;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
 }
+h3 {
+    margin: 18px 0 14px;
+    color: var(--text);
+    font-size: 1.25rem;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+}
+
 
 #general-nav {
     display: flex;
@@ -185,7 +187,7 @@ h2 {
 .nav button.active {
     background-color: rgba(47, 128, 237, 0.18);
     border-color: var(--primary-hover);
-    color: var(--nav-btn-active-text);  /* Usa la variable */
+    color: var(--nav-btn-active-text);  
 }
 
 
@@ -195,8 +197,8 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     margin-top: 18px;
-              /* Sigue ocupando todo el ancho */
-    margin-left: auto;        /* Centrado si el ancho es menor */
+              
+    margin-left: auto;        
     margin-right: auto;
 
     background-color: var(--surface);
