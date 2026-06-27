@@ -7,7 +7,7 @@
 - que los diferentes tipos de barco tengan un logo/color diferente (dependiendo de la bandera/tipobarco?)
 - que aparezca un pop up del info barquito *(LISTO?)*
 - Logo de pagina 
-- Tipografia
+- Tipografia*(listo)*
 - Filtros
 	- por pais
 	- por eslora 
