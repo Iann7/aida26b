@@ -8,7 +8,7 @@
 - que aparezca un pop up del info barquito **(LISTO?)**
 - Logo de pagina **(listo?)**
 - Tipografia **(listo)**
-- Filtros
+- Filtros **(listo)**
 	- por pais
 	- por eslora 
 	- por ubicacion
