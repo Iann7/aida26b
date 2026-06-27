@@ -66,7 +66,9 @@ type TableStructure = {
   uiName: LocalizedText
   title?: LocalizedText
   addButtonLabel?: LocalizedText
-  referencedTables?: string[]
+  referencedTables?: string[],
+  rowBehaviour: Boolean,
+  actionsSpecialBehaviour: Boolean
 }
 
 type menuStructure = {

@@ -105,6 +105,8 @@ export const structure = {
       uiName: { es: 'Barco', en: 'Vessel' },
       title: { es: 'Barcos', en: 'Vessels' },
       addButtonLabel: { es: 'Agregar Barco', en: 'Add Vessel' },
+      rowBehaviour: true,
+      actionsSpecialBehaviour: true
     } satisfies TableStructure,
 
     regions: {
@@ -161,6 +163,8 @@ export const structure = {
       uiName: { es: 'Región', en: 'Region' },
       title: { es: 'Regiones', en: 'Regions' },
       addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
+      rowBehaviour: true,
+      actionsSpecialBehaviour: false,
     } satisfies TableStructure,
   },
 

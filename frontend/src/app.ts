@@ -28,6 +28,7 @@ import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke, Text as OLText } from 'ol/style';
+import { boundingExtent } from 'ol/extent';
 
 const API_BASE = '/api';
 const PAGE_SIZE = 20;
@@ -838,6 +839,22 @@ async function zoomToVesselOnMap(mmsi: string): Promise<void> {
   }
 }
 
+async function showRegionOnMap(minLat:number,minLon:number,maxLat:number,maxLon:number): Promise<void> {
+  openVesselMap();
+   if (!vesselMap) return;
+
+  const extent = boundingExtent([
+    fromLonLat([minLon, minLat]),
+    fromLonLat([maxLon, maxLat]),
+  ]);
+
+  vesselMap.getView().fit(extent, {
+    padding: [40, 40, 40, 40],
+    duration: 500,
+    maxZoom: 12,
+  });
+}
+
 function toggleVesselOnMap(mmsi: string): void {
   if (mapVesselMmsis.has(mmsi)) {
     mapVesselMmsis.delete(mmsi);
@@ -1290,6 +1307,43 @@ paginationContainer.style.gap = '10px';
 paginationContainer.style.alignItems = 'center';
 sharedTable.parentNode?.insertBefore(paginationContainer, sharedTable.nextSibling);
 
+const rowBehaviour = {
+  regions: <K extends TableKey>(row: HTMLTableRowElement, record: TableRecordMap[K]) => {
+    const region = record as TableRecordMap['regions']
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => {
+      void showRegionOnMap(region.min_lat, region.min_lon, region.max_lat, region.max_lon);
+    });
+  },
+  vessels: <K extends TableKey> (row: HTMLTableRowElement, record: TableRecordMap[K] ) => {
+    const vessel = record as TableRecordMap['vessels']
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => {
+      void zoomToVesselOnMap(vessel.mmsi);
+    });
+  }
+}
+
+const actionsBehaviour = {
+  vessels: <K extends TableKey>(actionsTd: HTMLTableCellElement, record: TableRecordMap[K])  => {
+    const vessel = record as TableRecordMap['vessels']
+    const vesselMmsi = vessel.mmsi
+
+    const mapToggleBtn = document.createElement('button');
+    const isOnMap = mapVesselMmsis.has(vesselMmsi);
+
+    mapToggleBtn.className = isOnMap ? 'delete-btn' : 'edit-btn';
+    mapToggleBtn.textContent = getVesselMapActionLabel(vesselMmsi);
+    mapToggleBtn.dataset.vesselMapMmsi = vesselMmsi;
+    mapToggleBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleVesselOnMap(vesselMmsi);
+    });
+
+    actionsTd.appendChild(mapToggleBtn);
+  }
+}
+
 function renderAnyTable<K extends TableKey>(
   tableKey: K,
   records: TableRecordMap[K][]
@@ -1297,15 +1351,11 @@ function renderAnyTable<K extends TableKey>(
   const thead = sharedTable.querySelector('thead')!;
   const tbody = sharedTable.querySelector('tbody')!;
   const tableStructure = structure.tables[tableKey];
-  const isVesselsTable = tableKey === 'vessels';
-  const showActions = isVesselsTable || canWriteAcademic();
+  const showActions = canWriteAcademic();
 
   thead.innerHTML = '';
   tbody.innerHTML = '';
-  listedVesselMmsis = isVesselsTable
-    ? records.map((record) => String((record as { mmsi?: unknown }).mmsi ?? ''))
-        .filter(Boolean)
-    : [];
+
   renderVesselMapControls();
 
   const headerRow = document.createElement('tr');
@@ -1356,16 +1406,8 @@ function renderAnyTable<K extends TableKey>(
     const columnNames = Object.keys(tableStructure.columns) as Array<
       keyof TableRecordMap[K] & string
     >;
-    const vesselMmsi = isVesselsTable
-      ? String((record as { mmsi?: unknown }).mmsi ?? '')
-      : '';
 
-    if (vesselMmsi) {
-      row.style.cursor = 'pointer';
-      row.addEventListener('click', () => {
-        void zoomToVesselOnMap(vesselMmsi);
-      });
-    }
+    if(tableStructure.rowBehaviour) rowBehaviour[tableKey](row, record)
 
     columnNames.forEach((name) => {
       const td = document.createElement('td');
@@ -1382,19 +1424,8 @@ function renderAnyTable<K extends TableKey>(
         String(record[field as keyof TableRecordMap[K]] ?? '')
       );
 
-      if (isVesselsTable) {
-        const mapToggleBtn = document.createElement('button');
-        const isOnMap = mapVesselMmsis.has(vesselMmsi);
-
-        mapToggleBtn.className = isOnMap ? 'delete-btn' : 'edit-btn';
-        mapToggleBtn.textContent = getVesselMapActionLabel(vesselMmsi);
-        mapToggleBtn.dataset.vesselMapMmsi = vesselMmsi;
-        mapToggleBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          toggleVesselOnMap(vesselMmsi);
-        });
-
-        actionsTd.appendChild(mapToggleBtn);
+      if (tableStructure.actionsSpecialBehaviour) {
+        actionsBehaviour[tableKey as keyof typeof actionsBehaviour](actionsTd, record)
       } else {
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
