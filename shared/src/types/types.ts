@@ -69,6 +69,14 @@ type TableStructure = {
   referencedTables?: string[]
 }
 
+type menuStructure = {
+  title: LocalizedText,
+  id: string,
+  input_type: string,
+  options: Array<{ value: string; label: LocalizedText }>,
+  initial: Function
+}
+
 type InferType<FieldDefs extends Record<string, ColumnDef>> = {
   [K in keyof FieldDefs]: TypeMap[FieldDefs[K]['type']]
 }
@@ -89,4 +97,4 @@ type RendererProps<K extends TableKey> = {
 
 type RendererFunc = <K extends TableKey>(props: RendererProps<K>) => HTMLElement;
 
-export type {TypeMap, MyTypeNames, ColumnValidator, ColumnDef, TableStructure, InferType, TableKey, TableRecordMap, Response, ForeignKeyDef, Language, LocalizedText, RendererProps, RendererFunc};
+export type {TypeMap, MyTypeNames, ColumnValidator, ColumnDef, TableStructure, InferType, TableKey, TableRecordMap, Response, ForeignKeyDef, Language, LocalizedText, RendererProps, RendererFunc, menuStructure};

@@ -1,4 +1,4 @@
-import { TableStructure } from '../types/types';
+import { TableStructure, menuStructure } from '../types/types';
 
 type LocalizedText = {
   es: string;
@@ -165,6 +165,13 @@ export const structure = {
   },
 
   menu: {
+    map: {
+      title: { es: 'Mapa', en: 'Map' },
+      id: 'map-button',
+      input_type: 'button',
+      options: [],
+      initial: () => null,
+    } satisfies menuStructure,
     theme: {
       title: { es: 'Tema', en: 'Theme' },
       id: 'theme-picker',
@@ -174,7 +181,7 @@ export const structure = {
         { value: 'dark', label: { es: 'Oscuro', en: 'Dark' } },
       ],
       initial: () => localStorage.getItem('theme') || 'light',
-    },
+    } satisfies menuStructure,
 
     language: {
       title: { es: 'Idioma', en: 'Language' },
@@ -185,14 +192,7 @@ export const structure = {
         { value: 'en', label: { es: 'Inglés', en: 'English' } },
       ],
       initial: () => localStorage.getItem('language') || 'es',
-    },
-    map: {
-      title: { es: 'Mapa', en: 'Map' },
-      id: 'map-button',
-      input_type: 'button',
-      options: [],
-      initial: () => null,
-    }
+    } satisfies menuStructure
   },
 
   commonText: {

@@ -6,8 +6,9 @@ import {
   LocalizedText,
   ForeignKeyDef,
   ColumnDef,
-  TableStructure,
+  TableStructure,  
   TableKey,
+  menuStructure,
   TableRecordMap,
   RendererProps,
   RendererFunc,
@@ -1179,12 +1180,8 @@ const menu_handlers = {
     openVesselMap();
   }}
 
-function renderAnyMenuOption(key: keyof typeof structure.menu): void {
-  const config = structure.menu[key];
-  
-  if (!config.options) return;
-  
-  if(config.input_type == 'select'){
+const menu_inputs = {
+  select: (config: menuStructure, key: keyof typeof structure.menu) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'picker-wrapper';
 
@@ -1226,12 +1223,22 @@ function renderAnyMenuOption(key: keyof typeof structure.menu): void {
     wrapper.appendChild(label);
     wrapper.appendChild(select);
     menuContainer.appendChild(wrapper);
-  } else if(config.input_type === 'button'){
+  },
+  button: (config: menuStructure, key: keyof typeof structure.menu ) => {
     const button = document.createElement('button');
     button.textContent = getLocalizedText(config.title);
     button.addEventListener('click', menu_handlers[key] as () => void);
     menuContainer.appendChild(button);
   }
+}
+
+function renderAnyMenuOption(key: keyof typeof structure.menu): void {
+  const config = structure.menu[key] as menuStructure;
+  type MenuKey = keyof typeof menu_inputs;
+
+  if (!config.options) return;
+  
+  menu_inputs[config.input_type as MenuKey](config, key)
 }
 
 function showMenu(): void {
