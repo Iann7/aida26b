@@ -1478,6 +1478,20 @@ function renderPagination(total: number): void {
   info.textContent = `${getLocalizedText(structure.commonText.pageInfo)} ${currentState.page} ${getLocalizedText(structure.commonText.pageOf)} ${totalPages} (${getLocalizedText(structure.commonText.total)}: ${total})`;
   paginationContainer.appendChild(info);
 
+  const firstBtn = document.createElement('button');
+  firstBtn.textContent = '<<';
+  firstBtn.title = 'Primera página';
+  firstBtn.disabled = currentState.page <= 1;
+  firstBtn.addEventListener('click', () => {
+    if (currentState.page > 1) {
+      currentState.page = 1;
+      syncStateToUrl();
+      loadTableData(activeTableKey);
+    }
+  });
+
+  paginationContainer.appendChild(firstBtn);
+
   const prevBtn = document.createElement('button');
   prevBtn.textContent = getLocalizedText(structure.commonText.previous);
   prevBtn.disabled = currentState.page <= 1;
@@ -1490,6 +1504,7 @@ function renderPagination(total: number): void {
   });
   paginationContainer.appendChild(prevBtn);
 
+
   const nextBtn = document.createElement('button');
   nextBtn.textContent = getLocalizedText(structure.commonText.next);
   nextBtn.disabled = currentState.page >= totalPages;
@@ -1501,6 +1516,19 @@ function renderPagination(total: number): void {
     }
   });
   paginationContainer.appendChild(nextBtn);
+
+  const lastBtn = document.createElement('button');
+  lastBtn.textContent = '>>';
+  lastBtn.title = 'Última página';
+  lastBtn.disabled = currentState.page >= totalPages;
+  lastBtn.addEventListener('click', () => {
+    if (currentState.page < totalPages) {
+      currentState.page = totalPages;
+      syncStateToUrl();
+      loadTableData(activeTableKey);
+    }
+  });
+  paginationContainer.appendChild(lastBtn);
 }
 
 // -----------------------------------------------------------------------------
