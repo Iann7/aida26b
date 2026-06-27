@@ -19,7 +19,7 @@
     - Cuando clickeas en un barco en la tabla (no en el boton de agregar) se agregue tambien en el mapa, no solo te lleve a donde está
     - arreglar que los barcos que tienen el tipo de barco que son, no se agregan al mapa
     - asociar el numero del tipo de barco con el tipo de barco en la tabla de barcos
-    - cambair el color para el tema claro
+    - cambair el color para el tema claro*(Listo)*
  
 ## Scrapping 
 - Conseguir el tipo de barco y la bandera a la que responde *(LISTO, a medias)*
