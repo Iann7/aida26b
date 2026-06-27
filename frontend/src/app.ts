@@ -807,6 +807,10 @@ async function zoomToVesselOnMap(mmsi: string): Promise<void> {
 
   openVesselMap();
 
+  if (!mapVesselMmsis.has(mmsi)) {
+    toggleVesselOnMap(mmsi);
+  }
+
   try {
     const positions = await fetchLatestVesselPositions();
     const position = positions.find((pos) => String(pos.mmsi) === mmsi);
@@ -823,6 +827,11 @@ async function zoomToVesselOnMap(mmsi: string): Promise<void> {
       zoom: 8,
       duration: 450,
     });
+    
+    const mapContainer = document.getElementById('map-container');
+    if (mapContainer) {
+      mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   } catch (err) {
     console.error('Error zooming to vessel:', err);
   }
