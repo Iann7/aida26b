@@ -549,7 +549,11 @@ app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, 
         p.longitude,
         p.recorded_at,
         v.name as vessel_name,
-        v.mmsi
+        v.mmsi,
+        v.vessel_type,
+        v.flag_country,
+        v.length_m,
+        v.width_m
       FROM positions p
       JOIN vessels v ON v.mmsi = p.vessel_mmsi
       ORDER BY p.vessel_mmsi, p.recorded_at DESC
