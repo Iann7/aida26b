@@ -1,27 +1,60 @@
 :root {
-    --bg: #07111f;
-    --surface: #0f1d2e;
-    --surface-2: #15263a;
-    --surface-3: #1b3048;
+    /* =============================================
+       TEMA CLARO MARÍTIMO (Light Mode)
+       Paleta: Océano/Cielo/Arena
+       ============================================= */
 
-    --text: #e7edf5;
-    --text-muted: #9fb0c5;
+    /* --- Fondos --- */
+    --bg: #F4F8FB;                /* Fondo general (mar en calma) */
+    --surface: #FFFFFF;           /* Tarjetas, tablas y paneles */
+    --surface-2: #FDFBF7;         /* Fondos de formularios (arena) */
+    --surface-3: #E8EEF3;         /* Hover de botones de navegación */
 
-    --border: #263a55;
+    /* --- Textos --- */
+    --text: #1B2A3B;              /* Texto principal (azul petróleo) */
+    --text-muted: #4A6378;        /* Texto secundario y metadata */
 
-    --primary: #2f80ed;
-    --primary-hover: #4f9cff;
+    /* --- Bordes --- */
+    --border: #D3E0E8;            /* Espuma de mar */
 
-    --success: #16a085;
-    --success-hover: #1abc9c;
-    --danger: #d94b5f;
-    --danger-hover: #f06478;
-    --secondary: #51647d;
-    --secondary-hover: #617895;
+    /* --- Acentos (Botones/enlaces) --- */
+    --primary: #1E7A8C;           /* Cian profundo (océano) */
+    --primary-hover: #166473;     /* Cian más oscuro al pasar el ratón */
 
-    --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
-    --focus-ring: 0 0 0 3px rgba(47, 128, 237, 0.22);
-}
+    /* --- Estados (Éxito/Peligro) --- */
+    --success: #27AE60;           /* Verde ancla (fondeado) */
+    --success-hover: #1B9C6B;
+    --danger: #EB5757;            /* Rojo restringido (peligro) */
+    --danger-hover: #D94B5F;
+
+    /* --- Secundarios --- */
+    --secondary: #5D7A9E;         /* Gris azulado */
+    --secondary-hover: #4A6585;
+
+    /* --- Sombras y anillos --- */
+    --shadow: 0 4px 20px rgba(30, 122, 140, 0.08); /* Sombra acuática */
+    --focus-ring: 0 0 0 3px rgba(30, 122, 140, 0.25);
+
+    /* --- Fondos dinámicos para Body y Container --- */
+    --bg-gradient: linear-gradient(145deg, #E3EEF5 0%, #F4F8FB 100%);
+    --container-bg: rgba(255, 255, 255, 0.85);
+
+    --nav-btn-bg: rgba(255, 255, 255, 0.85);      /* Fondo claro para botones de navegación */
+    --nav-btn-hover-bg: #D3E0E8;                  /* Hover más oscuro */
+    --nav-btn-active-bg: rgba(30, 122, 140, 0.15); /* Activo con acento */
+    --nav-btn-border: #B0C4D8;
+
+    --input-bg: #FFFFFF;                          /* Fondo blanco para inputs */
+    --input-text: #1B2A3B;                        /* Texto oscuro */
+    --input-border: #D3E0E8;
+
+    --th-bg: #E8EEF3;                             /* Fondo de cabeceras de tabla */
+    --th-text: #1B2A3B;                           /* Texto oscuro */
+
+    --topbar-bg: rgba(255, 255, 255, 0.7); 
+
+    --nav-btn-active-text: #1B2A3B; 
+}  
 
 /* Dark Theme */
 [data-theme="dark"] {
@@ -47,6 +80,25 @@
 
     --shadow: 0 22px 55px rgba(0, 0, 0, 0.38);
     --focus-ring: 0 0 0 3px rgba(47, 128, 237, 0.25);
+
+    --bg-gradient: radial-gradient(circle at top left, rgba(47, 128, 237, 0.18), transparent 34rem), linear-gradient(180deg, #0a1627 0%, var(--bg) 42%, #050b14 100%);
+    --container-bg: rgba(15, 29, 46, 0.94);
+
+    --nav-btn-bg: rgba(21, 38, 58, 0.92);         /* Fondo oscuro (el que tenías fijo) */
+    --nav-btn-hover-bg: #19304b;
+    --nav-btn-active-bg: rgba(47, 128, 237, 0.18);
+    --nav-btn-border: var(--border);
+
+    --input-bg: #0b1625;                          /* Fondo oscuro (el que tenías fijo) */
+    --input-text: #edf4fb;                        /* Texto claro */
+    --input-border: var(--border);
+
+    --th-bg: #122238;                             /* Fondo oscuro (el que tenías) */
+    --th-text: #d8e6f5;                           /* Texto claro */
+
+    --topbar-bg: rgba(11, 22, 37, 0.72);
+
+    --nav-btn-active-text: #ffffff;
 }
 
 body {
@@ -55,9 +107,9 @@ body {
     min-height: 100vh;
     padding: 24px;
 
-    background:
-        radial-gradient(circle at top left, rgba(47, 128, 237, 0.18), transparent 34rem),
-        linear-gradient(180deg, #0a1627 0%, var(--bg) 42%, #050b14 100%);
+   
+    background: var(--bg-gradient);
+    background-attachment: fixed;
     color: var(--text);
 
     transition:
@@ -69,18 +121,20 @@ body {
     max-width: 1280px;
     margin: 0 auto;
 
-    background-color: rgba(15, 29, 46, 0.94);
+    
+    background-color: var(--container-bg);
+    backdrop-filter: blur(10px);
 
     padding: 28px;
-    border: 1px solid rgba(159, 176, 197, 0.16);
+    border: 1px solid var(--border);
     border-radius: 10px;
 
     box-shadow: var(--shadow);
-    backdrop-filter: blur(10px);
 
     transition:
         background-color 0.3s ease,
-        box-shadow 0.3s ease;
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
 }
 
 h1 {
@@ -116,37 +170,34 @@ h2 {
 
 .nav button {
     padding: 9px 14px;
-
-    background-color: rgba(21, 38, 58, 0.92);
+    background-color: var(--nav-btn-bg);
     color: var(--text);
-
-    border: 1px solid var(--border);
+    border: 1px solid var(--nav-btn-border);
     border-radius: 6px;
-
     cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        transform 0.15s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
-
 .nav button:hover {
-    background-color: var(--surface-3);
+    background-color: var(--nav-btn-hover-bg);
     border-color: rgba(79, 156, 255, 0.55);
     transform: translateY(-1px);
 }
-
 .nav button.active {
     background-color: rgba(47, 128, 237, 0.18);
     border-color: var(--primary-hover);
-    color: #ffffff;
+    color: var(--nav-btn-active-text);  /* Usa la variable */
 }
 
+
 table {
+    
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     margin-top: 18px;
+              /* Sigue ocupando todo el ancho */
+    margin-left: auto;        /* Centrado si el ancho es menor */
+    margin-right: auto;
 
     background-color: var(--surface);
     border: 1px solid var(--border);
@@ -164,9 +215,9 @@ td {
 }
 
 th {
-    background-color: #122238;
+    background-color: var(--th-bg);
     font-weight: bold;
-    color: #d8e6f5;
+    color: var(--th-text);
     font-size: 0.78rem;
     text-transform: uppercase;
 }
@@ -393,23 +444,15 @@ label {
     color: var(--text);
 }
 
-input,
-select {
+input, select {
     width: 100%;
-
     padding: 9px 10px;
-
-    border: 1px solid var(--border);
+    border: 1px solid var(--input-border);
     border-radius: 6px;
-
-    background-color: #0b1625;
-    color: var(--text);
-
+    background-color: var(--input-bg);
+    color: var(--input-text);
     box-sizing: border-box;
-
-    transition:
-        border-color 0.2s ease,
-        background-color 0.3s ease;
+    transition: border-color 0.2s ease, background-color 0.3s ease;
 }
 
 input:focus,
@@ -441,12 +484,13 @@ select:focus {
 }
 
 .top-bar {
+    display: flex;
     justify-content: space-between;
     margin-bottom: 16px;
     padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background-color: rgba(11, 22, 37, 0.72);
+    background-color: var(--topbar-bg);
 }
 
 .toolbar {
