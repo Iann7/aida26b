@@ -24,6 +24,6 @@
 ## Scrapping 
 - Conseguir el tipo de barco y la bandera a la que responde **(LISTO, a medias)**
 - Conseguir otro tipo de mensajes y enviarlos al schema de la db 
-- Conseguir las regiones (poner 2/3 como para probar) 
+- Conseguir las regiones (poner 2/3 como para probar) (Listo)
 
 
