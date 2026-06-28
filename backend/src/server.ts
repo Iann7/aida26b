@@ -502,106 +502,75 @@ async function createStudentWithUser(req: Request, res: express.Response) {
 }
 
 // Obtener última posición de cada barco
-app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, res) => {
+const latestPositionSelect = `
+  SELECT DISTINCT ON (p.vessel_mmsi)
+    p.latitude,
+    p.longitude,
+    p.recorded_at,
+    v.name AS vessel_name,
+    v.mmsi,
+    v.vessel_type,
+    v.flag_country,
+    v.length_m,
+    v.width_m
+  FROM positions p
+  JOIN vessels v
+    ON v.mmsi = p.vessel_mmsi
+`;
+
+async function getLatestPositions(whereClause = '', params: unknown[] = []) {
+  const query = `
+    ${latestPositionSelect}
+    ${whereClause}
+    ORDER BY p.vessel_mmsi, p.recorded_at DESC
+  `;
+
+  return pool.query(query, params);
+}
+
+app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (_req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT DISTINCT ON (p.vessel_mmsi)
-        p.latitude,
-        p.longitude,
-        p.recorded_at,
-        v.name as vessel_name,
-        v.mmsi,
-        v.vessel_type,
-        v.flag_country,
-        v.length_m,
-        v.width_m
-      FROM positions p
-      JOIN vessels v ON v.mmsi = p.vessel_mmsi
-      ORDER BY p.vessel_mmsi, p.recorded_at DESC
-    `);
-    return res.json(result.rows);
+    const result = await getLatestPositions();
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching latest positions:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.get('/api/positions/:mmsi',requireAuth,requirePasswordReady,
-  async (req, res) => {
-    try {
-      const { mmsi } = req.params;
+app.get('/api/positions/:mmsi', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const result = await getLatestPositions(
+      'WHERE p.vessel_mmsi = $1',
+      [req.params.mmsi]
+    );
 
-      const result = await pool.query(
-        `
-        SELECT DISTINCT ON (p.vessel_mmsi)
-          p.latitude,
-          p.longitude,
-          p.recorded_at,
-          v.name AS vessel_name,
-          v.mmsi,
-          v.vessel_type,
-          v.flag_country,
-          v.length_m,
-          v.width_m
-        FROM positions p
-        JOIN vessels v
-          ON v.mmsi = p.vessel_mmsi
-        WHERE p.vessel_mmsi = $1
-        ORDER BY p.vessel_mmsi, p.recorded_at DESC
-        LIMIT 1`,
-        [mmsi]
-      );
-
-      return res.json(result.rows[0] ?? null);
-    } catch (error) {
-      console.error('Error fetching latest position:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+    res.json(result.rows[0] ?? null);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-);
+});
 
-app.get(
-  '/api/positions',
-  requireAuth,
-  requirePasswordReady,
-  async (req, res) => {
-    try {
-      const mmsis = String(req.query.mmsis ?? '')
-        .split(',')
-        .filter(Boolean);
+app.get('/api/positions', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const mmsis = String(req.query.mmsis ?? '').split(',').filter(Boolean);
 
-      if (mmsis.length === 0) {
-        return res.json([]);
-      }
-
-      const result = await pool.query(
-        `
-        SELECT DISTINCT ON (p.vessel_mmsi)
-          p.latitude,
-          p.longitude,
-          p.recorded_at,
-          v.name AS vessel_name,
-          v.mmsi,
-          v.vessel_type,
-          v.flag_country,
-          v.length_m,
-          v.width_m
-        FROM positions p
-        JOIN vessels v
-          ON v.mmsi = p.vessel_mmsi
-        WHERE p.vessel_mmsi = ANY($1)
-        ORDER BY p.vessel_mmsi, p.recorded_at DESC
-        `,
-        [mmsis]
-      );
-
-      res.json(result.rows);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+    if (mmsis.length === 0) {
+      return res.json([]);
     }
+
+    const result = await getLatestPositions(
+      'WHERE p.vessel_mmsi = ANY($1)',
+      [mmsis]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-);
+});
 
 // Generic academic API routes
 app.get('/api/:tableName', requireAuth, requirePasswordReady, async (req, res) => {
