@@ -1317,6 +1317,9 @@ const rowBehaviour = {
   },
   vessels: <K extends TableKey> (row: HTMLTableRowElement, record: TableRecordMap[K] ) => {
     const vessel = record as TableRecordMap['vessels']
+
+    listedVesselMmsis.push(vessel.mmsi)
+
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => {
       void zoomToVesselOnMap(vessel.mmsi);
@@ -1355,8 +1358,6 @@ function renderAnyTable<K extends TableKey>(
 
   thead.innerHTML = '';
   tbody.innerHTML = '';
-
-  renderVesselMapControls();
 
   const headerRow = document.createElement('tr');
 
@@ -1458,6 +1459,8 @@ function renderAnyTable<K extends TableKey>(
 
     tbody.appendChild(row);
   });
+
+  renderVesselMapControls()
 }
 
 async function loadTableData<K extends TableKey>(tableKey: K): Promise<void> {
