@@ -2193,10 +2193,23 @@ function showUserForm(role: Exclude<Role, 'reader'>): void {
   formContainer.innerHTML = '';
 
   const form = document.createElement('form');
+  form.className = 'modal-form';
+
+  const header = document.createElement('div');
+  header.className = 'modal-header';
 
   const title = document.createElement('h3');
   title.textContent = `${getLocalizedText(structure.commonText.add)} ${label}`;
-  form.appendChild(title);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'modal-close-btn';
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', hideAnyForm);
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  form.appendChild(header);
 
   ['username', 'email'].forEach((field) => {
     const wrapper = document.createElement('div');
@@ -2300,7 +2313,11 @@ async function showAnyForm<K extends TableKey>(
   formContainer.innerHTML = '';
 
   const form = document.createElement('form');
+  form.className = 'modal-form';
   form.id = formId;
+
+  const header = document.createElement('div');
+  header.className = 'modal-header';
 
   const title = document.createElement('h3');
   title.textContent = `${
@@ -2308,7 +2325,16 @@ async function showAnyForm<K extends TableKey>(
       ? getLocalizedText(structure.commonText.edit)
       : getLocalizedText(structure.commonText.add)
   } ${getLocalizedText(tableConfig.uiName)}`;
-  form.appendChild(title);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'modal-close-btn';
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', hideAnyForm);
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  form.appendChild(header);
 
   fields.forEach((field) => form.appendChild(field));
 
