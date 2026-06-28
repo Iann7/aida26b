@@ -501,6 +501,77 @@ async function createStudentWithUser(req: Request, res: express.Response) {
   }
 }
 
+// Obtener última posición de cada barco
+const latestPositionSelect = `
+  SELECT DISTINCT ON (p.vessel_mmsi)
+    p.latitude,
+    p.longitude,
+    p.recorded_at,
+    v.name AS vessel_name,
+    v.mmsi,
+    v.vessel_type,
+    v.flag_country,
+    v.length_m,
+    v.width_m
+  FROM positions p
+  JOIN vessels v
+    ON v.mmsi = p.vessel_mmsi
+`;
+
+async function getLatestPositions(whereClause = '', params: unknown[] = []) {
+  const query = `
+    ${latestPositionSelect}
+    ${whereClause}
+    ORDER BY p.vessel_mmsi, p.recorded_at DESC
+  `;
+
+  return pool.query(query, params);
+}
+
+app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (_req, res) => {
+  try {
+    const result = await getLatestPositions();
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/positions/:mmsi', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const result = await getLatestPositions(
+      'WHERE p.vessel_mmsi = $1',
+      [req.params.mmsi]
+    );
+
+    res.json(result.rows[0] ?? null);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/positions', requireAuth, requirePasswordReady, async (req, res) => {
+  try {
+    const mmsis = String(req.query.mmsis ?? '').split(',').filter(Boolean);
+
+    if (mmsis.length === 0) {
+      return res.json([]);
+    }
+
+    const result = await getLatestPositions(
+      'WHERE p.vessel_mmsi = ANY($1)',
+      [mmsis]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Generic academic API routes
 app.get('/api/:tableName', requireAuth, requirePasswordReady, async (req, res) => {
   return getHandler(req, res, pool);
@@ -540,31 +611,6 @@ app.delete(
   }
 );
 
-// Obtener última posición de cada barco
-app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT DISTINCT ON (p.vessel_mmsi)
-        p.latitude,
-        p.longitude,
-        p.recorded_at,
-        v.name as vessel_name,
-        v.mmsi,
-        v.vessel_type,
-        v.flag_country,
-        v.length_m,
-        v.width_m
-      FROM positions p
-      JOIN vessels v ON v.mmsi = p.vessel_mmsi
-      ORDER BY p.vessel_mmsi, p.recorded_at DESC
-    `);
-    return res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching latest positions:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // Resolve frontend static files directory
 let frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
@@ -590,74 +636,4 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
-
-  const enableUpdater = (process.env.ENABLE_POSITION_UPDATER || 'false') === 'true';
-
-  // Por ahora descativado, ver bien como fecthear la informacion. La ides es que to corre cada cierto
-  // intervalo y actualice la tabla de positions con la info mas reciente de cada barco
-  if (false) {
-    const VESSEL_API_BASE = process.env.VESSEL_API_BASE || '';
-    const VESSEL_API_KEY = process.env.VESSEL_API_KEY || '';
-    const INTERVAL_S = parseInt(process.env.POSITION_UPDATER_INTERVAL || '60', 10);
-
-    async function fetchAndStorePositions(): Promise<void> {
-      try {
-        const vesselsRes = await pool.query('SELECT mmsi FROM vessels');
-        const vessels = vesselsRes.rows;
-
-        for (const v of vessels) {
-          try {
-            if (!v.mmsi) continue;
-
-            const url = VESSEL_API_BASE
-              ? `${VESSEL_API_BASE.replace(/\/$/, '')}?mmsi=${encodeURIComponent(String(v.mmsi))}`
-              : '';
-
-            if (!url) continue;
-
-            const headers: Record<string, string> = {};
-            if (VESSEL_API_KEY) headers['Authorization'] = `Bearer ${VESSEL_API_KEY}`;
-
-            const resp = await fetch(url, { headers });
-
-            if (!resp.ok) {
-              console.warn(`Failed fetching vessel ${v.mmsi}: ${resp.status}`);
-              continue;
-            }
-
-            const data = await resp.json();
-
-            const latitude = data.latitude ?? data.lat ?? null;
-            const longitude = data.longitude ?? data.lon ?? data.lng ?? null;
-            const recorded_at = data.recorded_at ?? data.timestamp ?? null;
-
-            if (latitude == null || longitude == null) continue;
-
-            await pool.query(
-              `INSERT INTO positions
-               (id, vessel_mmsi, latitude, longitude, recorded_at)
-               VALUES ($1,$2,$3,$4,COALESCE($5, now()))`,
-              [crypto.randomUUID(), v.mmsi, latitude, longitude, recorded_at]
-            );
-          } catch (err) {
-            console.error('Error processing vessel', v, err);
-          }
-        }
-      } catch (err) {
-        console.error('Position updater failed:', err);
-      }
-    }
-
-    (async () => {
-      try {
-        await fetchAndStorePositions();
-      } catch (err) {
-        console.error('Initial position fetch failed:', err);
-      }
-
-      setInterval(() => {
-        void fetchAndStorePositions();
-      }, Math.max(1000, INTERVAL_S * 1000));
-    })();
-  }
 }

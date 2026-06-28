@@ -591,6 +591,22 @@ function syncVesselMapButtons(): void {
   renderVesselMapControls();
 }
 
+async function fetchLatestVesselPositionsOnMap(mmsis: string): Promise<LatestVesselPosition[]> {
+  const response = await apiFetch( `/positions?mmsis=${encodeURIComponent(mmsis)}`)
+
+  const lastVesselPositions = (await response.json()) as LatestVesselPosition[];
+  
+  return lastVesselPositions;
+}
+
+async function fetchLatestVesselPosition(mmsi:string): Promise<LatestVesselPosition> {
+  const response = await apiFetch(`/positions/${mmsi}`)
+
+  const lastVesselPositions = (await response.json()) as LatestVesselPosition;
+  
+  return lastVesselPositions;
+}
+
 async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
   const response = await apiFetch('/positions/latest');
   if (!response.ok) return latestVesselPositions;
@@ -690,11 +706,11 @@ async function refreshVesselMapMarkers(): Promise<void> {
   if (mapVesselMmsis.size === 0) return;
 
   try {
-    const positions = await fetchLatestVesselPositions();
-
-    positions
-      .filter((pos: any) => mapVesselMmsis.has(String(pos.mmsi)))
-      .forEach((pos: any) => {
+    const mmsis = Array.from(mapVesselMmsis).join(',');
+    
+    const positions = await fetchLatestVesselPositionsOnMap(mmsis)
+    
+    positions.forEach((pos: any) => {
         const feature = new Feature(
           new Point(fromLonLat([pos.longitude, pos.latitude]))
         );
@@ -814,9 +830,8 @@ async function zoomToVesselOnMap(mmsi: string): Promise<void> {
   }
 
   try {
-    const positions = await fetchLatestVesselPositions();
-    const position = positions.find((pos) => String(pos.mmsi) === mmsi);
-
+    const position = await fetchLatestVesselPosition(mmsi);
+    
     if (!position || !vesselMap) return;
 
     const longitude = Number(position.longitude);
@@ -841,7 +856,8 @@ async function zoomToVesselOnMap(mmsi: string): Promise<void> {
 
 async function showRegionOnMap(minLat:number,minLon:number,maxLat:number,maxLon:number): Promise<void> {
   openVesselMap();
-   if (!vesselMap) return;
+  
+  if (!vesselMap) return;
 
   const extent = boundingExtent([
     fromLonLat([minLon, minLat]),
