@@ -24,19 +24,7 @@ CREATE TABLE IF NOT EXISTS regions (
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Tabla: packets (paquetes/distintas transmisiones enviadas por barco)
-CREATE TABLE IF NOT EXISTS packets (
-    id text PRIMARY KEY,
-    vessel_mmsi text REFERENCES vessels(mmsi) ON DELETE CASCADE,
-    packet_type text,
-    sequence_number bigint,
-    source text,
-    created_at timestamptz NOT NULL DEFAULT now()
-);
-
 -- Índices para consultas frecuentes
-CREATE INDEX IF NOT EXISTS idx_packets_vessel_mmsi ON packets(vessel_mmsi);
-CREATE INDEX IF NOT EXISTS idx_packets_created_at ON packets(created_at);
 CREATE INDEX IF NOT EXISTS idx_regions_bbox ON regions(min_lat, max_lat, min_lon, max_lon);
 
 -- Tabla: positions (posiciones normalizadas por barco)

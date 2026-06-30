@@ -1,0 +1,2 @@
+# INFORME
+Siguiendo los principios

@@ -14,8 +14,8 @@ COPY frontend/styles ./styles
 COPY frontend/index.html ./
 COPY frontend/tsconfig.json ./
 COPY frontend/webpack*.js ./
-COPY shared /app/shared
 COPY tsconfig.base.json /app/tsconfig.base.json
+COPY shared/src /app/shared/src
 
 # Build the application
 RUN npm run build
