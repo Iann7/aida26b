@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY fleet_scrapper/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY fleet_scrapper/ .
+
+CMD ["python", "fleet_scrapper.py"]
