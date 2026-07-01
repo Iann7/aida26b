@@ -5,4 +5,5 @@ Buscando generar una nueva logica de negocio sobre el esquema que ya teniamos, o
 - Poder crear sectores de interes que puedan ser facilmente indentificables en el mapa, con el fin de poder observar los barcos de una determinada parte del mundo.
 
 Para poder cumplir con esto se realiaron los siguientes cambios:
-- Con el fin de poder representar las tablas de nuestro proyecto, modificamos el archivo structure.ts. En este caso, detro del campo de tables agregamos una denominada vessels que indenficaa los barcos 
+- Con el fin de poder representar las tablas de nuestro proyecto, modificamos el archivo structure.ts. En este caso, detro del campo de tables agregamos una denominada vessels que indentifica los barcos, agregando todos los campos que nos gustaria poder mostrar. A su vez tambien agregamos la correspondiente a las regiones, que reprenseta los sectores de interes que queremos visualizar de mapa. Este cambio nos permitio resolver gran parte del problema. Por como esta construido el kernel del sistema, el cambio el stcrture.ts nos permiitio agregar los endpoints necesarios para obtener la informacion y modificar, hacer el display de las tablas en el frontend y agregar los filtros pertinentes en base a nuestras columnas. 
+- 
