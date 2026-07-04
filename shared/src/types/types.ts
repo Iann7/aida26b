@@ -68,7 +68,10 @@ type TableStructure = {
   addButtonLabel?: LocalizedText
   referencedTables?: string[],
   rowBehaviour: Boolean,
-  actionsSpecialBehaviour: Boolean
+  belongsTo?: {
+    table: string,
+    foreignKey: string
+  }
 }
 
 type menuStructure = {

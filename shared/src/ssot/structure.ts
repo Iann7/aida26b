@@ -66,8 +66,7 @@ export const structure = {
         es: 'Agregar Barco de Interés',
         en: 'Add Tracked Vessel',
       },
-      rowBehaviour: true,
-      actionsSpecialBehaviour: true,
+      rowBehaviour: true
     } satisfies TableStructure,
     crew_members: {
       columns: {
@@ -132,7 +131,10 @@ export const structure = {
       },
 
       rowBehaviour: true,
-      actionsSpecialBehaviour: true,
+      belongsTo: {
+        table: "interesting_vessels",
+        foreignKey: "vessel_mmsi",
+      }
     } satisfies TableStructure,
     packets: {
       columns: {
@@ -185,9 +187,11 @@ export const structure = {
         es: 'Agregar Paquete',
         en: 'Add Packet',
       },
-
-      rowBehaviour: true,
-      actionsSpecialBehaviour: false,
+      belongsTo: {
+        table: "interesting_vessels",
+        foreignKey: "vessel_mmsi",
+      },
+      rowBehaviour: true
     } satisfies TableStructure,
     regions: {
       columns: {
@@ -244,7 +248,6 @@ export const structure = {
       title: { es: 'Regiones', en: 'Regions' },
       addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
       rowBehaviour: true,
-      actionsSpecialBehaviour: false,
     } satisfies TableStructure,
   },
   menu: {

@@ -29,6 +29,7 @@ import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke, Text as OLText } from 'ol/style';
 import { boundingExtent } from 'ol/extent';
+import { Type } from 'ol/centerconstraint';
 
 const API_BASE = '/api';
 const PAGE_SIZE = 20;
@@ -547,7 +548,6 @@ let currentState: TableState = {
   filters: {},
 };
 
-const mapVesselMmsis = new Set<string>();
 let vesselMap: OLMap | null = null;
 let vesselMapMarkerSource: VectorSource | null = null;
 let vesselMapInterval: ReturnType<typeof setInterval> | null = null;
@@ -555,7 +555,6 @@ let vesselMapControlsContainer: HTMLDivElement | null = null;
 let vesselMapTooltip: HTMLDivElement | null = null;
 
 const vesselFeatures = new Map<string, Feature<Point>>();
-const vesselStyleCache = new Map<string, Style>();
 
 type LatestVesselPosition = {
   latitude: string | number;
@@ -570,14 +569,6 @@ type LatestVesselPosition = {
 };
 
 let latestVesselPositions: LatestVesselPosition[] = [];
-
-async function fetchLatestVesselPosition(mmsi:string): Promise<LatestVesselPosition> {
-  const response = await apiFetch(`/positions/${mmsi}`)
-
-  const lastVesselPositions = (await response.json()) as LatestVesselPosition;
-  
-  return lastVesselPositions;
-}
 
 async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
   const response = await apiFetch('/positions/latest');
@@ -601,6 +592,7 @@ type vessel_labels = {
   latest_position_at: LocalizedText;
 }
 
+
 const vessels_labels: vessel_labels = {
   mmsi: { es: 'MMSI', en: 'MMSI' },
   name: { es: 'Nombre', en: 'Name' },
@@ -611,6 +603,95 @@ const vessels_labels: vessel_labels = {
   length_m: { es: 'Eslora (m)', en: 'Length (m)' },
   width_m: { es: 'Manga (m)', en: 'Width (m)' },
   latest_position_at: { es: 'Última posición', en: 'Latest position' },
+}
+
+function openVesselMap(): void {
+  createMapIfNeeded();
+
+  createVesselInfoPanel();
+
+  refreshVesselMapMarkers();
+  
+  startPolling()
+}
+
+function createMapIfNeeded(): void {
+  if (document.getElementById('map-container')) return;
+
+  const container = document.createElement('div');
+  container.id = 'map-container';
+
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'map';
+  mapDiv.style.width = '100%';
+  mapDiv.style.height = '600px';
+  container.appendChild(mapDiv);
+
+  vesselMapTooltip = document.createElement('div');
+  vesselMapTooltip.className = 'map-vessel-tooltip';
+  vesselMapTooltip.hidden = true;
+  container.appendChild(vesselMapTooltip);
+
+  recordsSection.insertBefore(container, viewTitle);
+
+  vesselMap = new OLMap({
+    target: 'map',
+    layers: [new TileLayer({ source: new OSM() })],
+    view: new View({ center: [0, 0], zoom: 2 }),
+  });
+
+  vesselMapMarkerSource = new VectorSource();
+  const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
+  vesselMap.addLayer(markerLayer);
+
+  vesselMap.on('pointermove', (event) => {
+    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
+    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
+
+    if (!position) {
+      hideVesselMapTooltip();
+      mapDiv.style.cursor = '';
+      return;
+    }
+
+    mapDiv.style.cursor = 'pointer';
+    showVesselMapTooltip(position, event.pixel as [number, number]);
+  });
+
+  vesselMap.on('click', (event) => {
+    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
+    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
+
+    if (!position || !vesselMap) return;
+
+    const longitude = Number(position.longitude);
+    const latitude = Number(position.latitude);
+
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
+
+    vesselMap.getView().animate({
+      center: fromLonLat([longitude, latitude]),
+      zoom: Math.max(vesselMap.getView().getZoom() ?? 2, 9),
+      duration: 450,
+    });
+  });
+
+  vesselMap.on("singleclick", (event) => {
+    const feature = vesselMap?.forEachFeatureAtPixel(
+        event.pixel,
+        feature => feature
+    );
+    
+    if (!feature) return;
+    
+    const position = feature.get("vesselPosition");
+    
+    loadVesselPanel(position.mmsi, position.vessel_name);
+  });
+
+  mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
+
+  showRegionOnMap(-57,-80,-20,-52);
 }
 
 function vesselTooltipRows(position: LatestVesselPosition): VesselTooltipRow[] {
@@ -692,82 +773,6 @@ function hideVesselMapTooltip(): void {
   if (vesselMapTooltip) {
     vesselMapTooltip.hidden = true;
   }
-}
-
-function openVesselMap(): void {
-  createMapIfNeeded();
-
-  refreshVesselMapMarkers();
-  
-  startPolling()
-}
-
-function createMapIfNeeded(): void {
-  console.log("Creating map..")
-
-  if (document.getElementById('map-container')) return;
-
-  const container = document.createElement('div');
-  container.id = 'map-container';
-
-  const mapDiv = document.createElement('div');
-  mapDiv.id = 'map';
-  mapDiv.style.width = '100%';
-  mapDiv.style.height = '600px';
-  container.appendChild(mapDiv);
-
-  vesselMapTooltip = document.createElement('div');
-  vesselMapTooltip.className = 'map-vessel-tooltip';
-  vesselMapTooltip.hidden = true;
-  container.appendChild(vesselMapTooltip);
-
-  recordsSection.insertBefore(container, viewTitle);
-
-  vesselMap = new OLMap({
-    target: 'map',
-    layers: [new TileLayer({ source: new OSM() })],
-    view: new View({ center: [0, 0], zoom: 2 }),
-  });
-
-  vesselMapMarkerSource = new VectorSource();
-  const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
-  vesselMap.addLayer(markerLayer);
-
-  vesselMap.on('pointermove', (event) => {
-    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
-    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
-
-    if (!position) {
-      hideVesselMapTooltip();
-      mapDiv.style.cursor = '';
-      return;
-    }
-
-    mapDiv.style.cursor = 'pointer';
-    showVesselMapTooltip(position, event.pixel as [number, number]);
-  });
-
-  vesselMap.on('click', (event) => {
-    const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
-    const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
-
-    if (!position || !vesselMap) return;
-
-    const longitude = Number(position.longitude);
-    const latitude = Number(position.latitude);
-
-    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
-
-    vesselMap.getView().animate({
-      center: fromLonLat([longitude, latitude]),
-      zoom: Math.max(vesselMap.getView().getZoom() ?? 2, 9),
-      duration: 450,
-    });
-  });
-
-  mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
-
-  showRegionOnMap(-57,-80,-20,-52);
 }
 
 function createVesselStyle(
@@ -902,40 +907,6 @@ function closeVesselMap(): void {
   }
 }
 
-async function zoomToVesselOnMap(mmsi: string): Promise<void> {
-  if (!mmsi) return;
-
-  openVesselMap();
-
-  if (!mapVesselMmsis.has(mmsi)) {
-    toggleVesselOnMap(mmsi);
-  }
-
-  try {
-    const position = await fetchLatestVesselPosition(mmsi);
-    
-    if (!position || !vesselMap) return;
-
-    const longitude = Number(position.longitude);
-    const latitude = Number(position.latitude);
-
-    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
-
-    vesselMap.getView().animate({
-      center: fromLonLat([longitude, latitude]),
-      zoom: 8,
-      duration: 450,
-    });
-    
-    const mapContainer = document.getElementById('map-container');
-    if (mapContainer) {
-      mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  } catch (err) {
-    console.error('Error zooming to vessel:', err);
-  }
-}
-
 async function showRegionOnMap(minLat:number,minLon:number,maxLat:number,maxLon:number): Promise<void> {
   openVesselMap();
   
@@ -953,14 +924,135 @@ async function showRegionOnMap(minLat:number,minLon:number,maxLat:number,maxLon:
   });
 }
 
-function toggleVesselOnMap(mmsi: string): void {
-  if (mapVesselMmsis.has(mmsi)) {
-    mapVesselMmsis.delete(mmsi);
-  } else {
-    mapVesselMmsis.add(mmsi);
+//Panel logic
+type VesselDetails = {
+  entity: Record<string, any>;
+  relations: Record<string, any[]>;
+}
+
+function createVesselInfoPanel(): HTMLElement {
+  let panel = document.getElementById('vessel-info-panel');
+
+  if (panel) return panel;
+
+  panel = document.createElement('div');
+  panel.id = 'vessel-info-panel';
+  panel.classList.add('vessel-info-panel');
+
+  document.getElementById('map-container')!.appendChild(panel);
+
+  return panel;
+}
+
+function openVesselInfoPanel() {
+  const panel = createVesselInfoPanel();
+  panel.classList.add('open');
+}
+
+function closeVesselInfoPanel() {
+  const panel = createVesselInfoPanel();
+  panel.classList.remove('open');
+}
+
+async function loadVesselPanel(mmsi: string, vesselName: string): Promise<void> {
+
+    const response = await apiFetch(`/vessels/${mmsi}/details`);
+
+    const data = await response.json();
+
+    console.log("Vessel details:", data);
+
+    renderVesselPanel(data, vesselName);
+
+    openVesselInfoPanel();
+}
+
+function renderPanelTable(
+    container: HTMLElement,
+    table: keyof typeof structure.tables,
+    rows: Record<string, any>[]
+) {
+
+    const columns = structure.tables[table].columns;
+
+    const tableElement = document.createElement("table");
+
+    const header = document.createElement("tr");
+
+    for (const [key, column] of Object.entries(columns)) {
+
+        const th = document.createElement("th");
+
+        th.textContent = getLocalizedText(column.label);
+
+        header.appendChild(th);
+
+    }
+
+    tableElement.appendChild(header);
+
+    for (const rowData of rows) {
+        const tr = document.createElement("tr");
+
+        for (const key of Object.keys(columns)) {
+            const td = document.createElement("td");
+            td.textContent = rowData[key] ?? "";
+            tr.appendChild(td);
+        }
+        tableElement.appendChild(tr);
+    }
+    container.appendChild(tableElement);
+}
+
+function renderVesselPanel(data: VesselDetails, vesselName: string): void {
+  const panel = createVesselInfoPanel();
+
+  panel.replaceChildren();
+
+  const header = document.createElement('div');
+  header.className = 'vessel-info-panel__header';
+
+  const title = document.createElement('h2');
+  title.textContent = vesselName;
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'vessel-info-panel__close';
+  closeButton.textContent = '✕';
+  closeButton.addEventListener('click', closeVesselInfoPanel);
+
+  header.append(title, closeButton);
+  panel.appendChild(header);
+  panel.appendChild(document.createElement('hr'));
+
+  const mainTitle = document.createElement('h3');
+  mainTitle.textContent = getLocalizedText(structure.tables.interesting_vessels.title) || getLocalizedText(structure.tables.interesting_vessels.uiName);
+  panel.appendChild(mainTitle);
+
+  panel.appendChild(document.createElement('hr'));
+
+  const relationTables = Object.entries(data.relations);
+
+  if (relationTables.length === 0) {
+    const emptyMessage = document.createElement('p');
+    emptyMessage.textContent = 'No hay datos relacionados disponibles';
+    panel.appendChild(emptyMessage);
+    return;
   }
 
-  void refreshVesselMapMarkers();
+  for (const [relationTable, rows] of relationTables) {
+    if (!rows || rows.length === 0) continue;
+
+    const tableDef = structure.tables[relationTable as keyof typeof structure.tables];
+    if (!tableDef) continue;
+
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.textContent = getLocalizedText(tableDef.title) || getLocalizedText(tableDef.uiName);
+    panel.appendChild(sectionTitle);
+
+    renderPanelTable(panel, relationTable as keyof typeof structure.tables, rows);
+    panel.appendChild(document.createElement('hr'));
+  }
 }
 
 //Filters
@@ -1409,35 +1501,32 @@ function renderAnyTable<K extends TableKey>(
         String(record[field as keyof TableRecordMap[K]] ?? '')
       );
 
-      if (tableStructure.actionsSpecialBehaviour) {
-        
-      } else {
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit-btn';
-        editBtn.textContent = getLocalizedText(structure.commonText.edit);
-        editBtn.dataset.pk = JSON.stringify(pkValues);
-        editBtn.addEventListener('click', (event) => {
-          const values = JSON.parse(
-            (event.currentTarget as HTMLElement).dataset.pk || '[]'
-          );
-          window.editRecord(tableKey, ...values);
-        });
+      
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = getLocalizedText(structure.commonText.edit);
+      editBtn.dataset.pk = JSON.stringify(pkValues);
+      editBtn.addEventListener('click', (event) => {
+        const values = JSON.parse(
+          (event.currentTarget as HTMLElement).dataset.pk || '[]'
+        );
+        window.editRecord(tableKey, ...values);
+      });
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.textContent = getLocalizedText(structure.commonText.delete);
-        deleteBtn.dataset.pk = JSON.stringify(pkValues);
-        deleteBtn.addEventListener('click', (event) => {
-          const values = JSON.parse(
-            (event.currentTarget as HTMLElement).dataset.pk || '[]'
-          );
-          window.deleteRecord(tableKey, ...values);
-        });
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = getLocalizedText(structure.commonText.delete);
+      deleteBtn.dataset.pk = JSON.stringify(pkValues);
+      deleteBtn.addEventListener('click', (event) => {
+        const values = JSON.parse(
+          (event.currentTarget as HTMLElement).dataset.pk || '[]'
+        );
+        window.deleteRecord(tableKey, ...values);
+      });
 
-        actionsTd.appendChild(editBtn);
-        actionsTd.appendChild(deleteBtn);
-      }
-
+      actionsTd.appendChild(editBtn);
+      actionsTd.appendChild(deleteBtn);
+    
       row.appendChild(actionsTd);
     }
 
