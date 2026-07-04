@@ -9,7 +9,6 @@ CREATE TABLE auth.users (
     role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'editor', 'reader')),
     is_active BOOLEAN NOT NULL DEFAULT true,
     must_change_password BOOLEAN NOT NULL DEFAULT true,
-    student_numero_libreta VARCHAR(20) REFERENCES students(numero_libreta) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

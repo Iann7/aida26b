@@ -1,4 +1,6 @@
--- Migration: 20260615_120000_vessels_regions_packets.sql
+
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ----------------------------------------------------
 -- VESSELS
@@ -17,13 +19,16 @@ CREATE TABLE IF NOT EXISTS vessels (
 -- REGIONS
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS regions (
-    id text PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
     name text NOT NULL,
     description text,
+
     min_lat numeric NOT NULL,
     max_lat numeric NOT NULL,
     min_lon numeric NOT NULL,
     max_lon numeric NOT NULL,
+
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -31,14 +36,21 @@ CREATE INDEX IF NOT EXISTS idx_regions_bbox
 ON regions(min_lat, max_lat, min_lon, max_lon);
 
 ----------------------------------------------------
--- PACKETS (mensaje AIS recibido)
+-- PACKETS
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS packets (
-    id text PRIMARY KEY,
-    vessel_mmsi text REFERENCES vessels(mmsi) ON DELETE CASCADE,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    vessel_mmsi text NOT NULL
+        REFERENCES vessels(mmsi)
+        ON DELETE CASCADE,
+
     packet_type text NOT NULL,
+
     source text,
+
     received_at timestamptz NOT NULL DEFAULT now(),
+
     raw_payload jsonb NOT NULL
 );
 
@@ -52,10 +64,11 @@ ON packets(received_at);
 -- POSITIONS
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS positions (
-    id text PRIMARY KEY,
-    vessel_mmsi text REFERENCES vessels(mmsi) ON DELETE CASCADE,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 
-    packet_id text REFERENCES packets(id) ON DELETE SET NULL,
+    vessel_mmsi text NOT NULL
+        REFERENCES vessels(mmsi)
+        ON DELETE CASCADE,
 
     latitude numeric NOT NULL,
     longitude numeric NOT NULL,
@@ -95,7 +108,7 @@ CREATE TABLE IF NOT EXISTS interesting_vessels (
 -- CREW MEMBERS
 ----------------------------------------------------
 CREATE TABLE IF NOT EXISTS crew_members (
-    id text PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 
     vessel_mmsi text NOT NULL
         REFERENCES vessels(mmsi)
