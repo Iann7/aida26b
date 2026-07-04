@@ -18,7 +18,7 @@ import { getPkFields } from '@shared/utils/utils';
 import { validateField } from '@shared/validation/validate';
 import '../styles/style.css';
 
-import Map from 'ol/Map';
+import OLMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
@@ -94,11 +94,12 @@ const viewTitle = document.getElementById('view-title') as HTMLElement;
 const addRecordBtn = document.getElementById('add-record-btn') as HTMLButtonElement;
 const adminActions = document.getElementById('admin-actions') as HTMLElement;
 
-
 const formContainer = document.getElementById('record-form') as HTMLElement;
 const sharedTable = document.getElementById('records-table') as HTMLTableElement;
 const navContainer = document.getElementById('table-nav') as HTMLElement;
 const menuContainer = document.getElementById('menu-nav') as HTMLElement;
+
+type AppSection = TableKey | 'map';
 
 const tableKeys = Object.keys(structure.tables) as TableKey[];
 const menuKeys = Object.keys(structure.menu) as Array<keyof typeof structure.menu>;
@@ -547,12 +548,14 @@ let currentState: TableState = {
 };
 
 const mapVesselMmsis = new Set<string>();
-let listedVesselMmsis: string[] = [];
-let vesselMap: Map | null = null;
+let vesselMap: OLMap | null = null;
 let vesselMapMarkerSource: VectorSource | null = null;
 let vesselMapInterval: ReturnType<typeof setInterval> | null = null;
 let vesselMapControlsContainer: HTMLDivElement | null = null;
 let vesselMapTooltip: HTMLDivElement | null = null;
+
+const vesselFeatures = new Map<string, Feature<Point>>();
+const vesselStyleCache = new Map<string, Style>();
 
 type LatestVesselPosition = {
   latitude: string | number;
@@ -567,37 +570,6 @@ type LatestVesselPosition = {
 };
 
 let latestVesselPositions: LatestVesselPosition[] = [];
-
-function getVesselMapActionLabel(mmsi: string): string {
-  return getLocalizedText(
-    mapVesselMmsis.has(mmsi)
-      ? structure.commonText.remove
-      : structure.commonText.add
-  );
-}
-
-function syncVesselMapButtons(): void {
-  sharedTable
-    .querySelectorAll<HTMLButtonElement>('[data-vessel-map-mmsi]')
-    .forEach((button) => {
-      const mmsi = button.dataset.vesselMapMmsi || '';
-      const isOnMap = mapVesselMmsis.has(mmsi);
-
-      button.textContent = getVesselMapActionLabel(mmsi);
-      button.classList.toggle('edit-btn', !isOnMap);
-      button.classList.toggle('delete-btn', isOnMap);
-    });
-
-  renderVesselMapControls();
-}
-
-async function fetchLatestVesselPositionsOnMap(mmsis: string): Promise<LatestVesselPosition[]> {
-  const response = await apiFetch( `/positions?mmsis=${encodeURIComponent(mmsis)}`)
-
-  const lastVesselPositions = (await response.json()) as LatestVesselPosition[];
-  
-  return lastVesselPositions;
-}
 
 async function fetchLatestVesselPosition(mmsi:string): Promise<LatestVesselPosition> {
   const response = await apiFetch(`/positions/${mmsi}`)
@@ -617,42 +589,66 @@ async function fetchLatestVesselPositions(): Promise<LatestVesselPosition[]> {
 
 type VesselTooltipRow = [string, string | HTMLElement];
 
+type vessel_labels = {
+  mmsi: LocalizedText;
+  name: LocalizedText;
+  vessel_type: LocalizedText;
+  flag_country: LocalizedText;
+  latest_latitude: LocalizedText;
+  latest_longitude: LocalizedText;
+  length_m: LocalizedText;
+  width_m: LocalizedText;
+  latest_position_at: LocalizedText;
+}
+
+const vessels_labels: vessel_labels = {
+  mmsi: { es: 'MMSI', en: 'MMSI' },
+  name: { es: 'Nombre', en: 'Name' },
+  vessel_type: { es: 'Tipo de buque', en: 'Vessel type' },
+  flag_country: { es: 'País de bandera', en: 'Flag country' },
+  latest_latitude: { es: 'Latitud', en: 'Latitude' },
+  latest_longitude: { es: 'Longitud', en: 'Longitude' },
+  length_m: { es: 'Eslora (m)', en: 'Length (m)' },
+  width_m: { es: 'Manga (m)', en: 'Width (m)' },
+  latest_position_at: { es: 'Última posición', en: 'Latest position' },
+}
+
 function vesselTooltipRows(position: LatestVesselPosition): VesselTooltipRow[] {
-  const columns = structure.tables.vessels.columns;
+  const labels = vessels_labels;
   const rows: VesselTooltipRow[] = [
-    [getLocalizedText(columns.mmsi.label), String(position.mmsi)],
+    [getLocalizedText(labels.mmsi), String(position.mmsi)],
   ];
 
   const name = position.vessel_name || '';
-  if (name) rows.push([getLocalizedText(columns.name.label), name]);
+  if (name) rows.push([getLocalizedText(labels.name), name]);
   if (position.vessel_type) {
-    rows.push([getLocalizedText(columns.vessel_type.label), String(position.vessel_type)]);
+    rows.push([getLocalizedText(labels.vessel_type), String(position.vessel_type)]);
   }
   if (position.flag_country) {
     const flagValue = document.createElement('span');
     flagValue.className = 'map-tooltip-flag';
     appendFlagContent(flagValue, position.flag_country);
-    rows.push([getLocalizedText(columns.flag_country.label), flagValue]);
+    rows.push([getLocalizedText(labels.flag_country), flagValue]);
   }
 
   rows.push([
-    getLocalizedText(columns.latest_latitude.label),
+    getLocalizedText(labels.latest_latitude),
     formatTableCell('latest_latitude', position.latitude),
   ]);
   rows.push([
-    getLocalizedText(columns.latest_longitude.label),
+    getLocalizedText(labels.latest_longitude),
     formatTableCell('latest_longitude', position.longitude),
   ]);
 
   if (position.length_m != null) {
-    rows.push([getLocalizedText(columns.length_m.label), formatTableCell('length_m', position.length_m)]);
+    rows.push([getLocalizedText(labels.length_m), formatTableCell('length_m', position.length_m)]);
   }
   if (position.width_m != null) {
-    rows.push([getLocalizedText(columns.width_m.label), formatTableCell('width_m', position.width_m)]);
+    rows.push([getLocalizedText(labels.width_m), formatTableCell('width_m', position.width_m)]);
   }
   if (position.recorded_at) {
     rows.push([
-      getLocalizedText(columns.latest_position_at.label),
+      getLocalizedText(labels.latest_position_at),
       formatTableCell('latest_position_at', position.recorded_at),
     ]);
   }
@@ -698,50 +694,17 @@ function hideVesselMapTooltip(): void {
   }
 }
 
-async function refreshVesselMapMarkers(): Promise<void> {
-  if (!vesselMapMarkerSource) return;
+function openVesselMap(): void {
+  createMapIfNeeded();
 
-  vesselMapMarkerSource.clear();
-
-  if (mapVesselMmsis.size === 0) return;
-
-  try {
-    const mmsis = Array.from(mapVesselMmsis).join(',');
-    
-    const positions = await fetchLatestVesselPositionsOnMap(mmsis)
-    
-    positions.forEach((pos: any) => {
-        const feature = new Feature(
-          new Point(fromLonLat([pos.longitude, pos.latitude]))
-        );
-
-        feature.set('vesselPosition', pos);
-
-        feature.setStyle(
-          new Style({
-            image: new CircleStyle({
-              radius: 8,
-              fill: new Fill({ color: '#3388ff' }),
-              stroke: new Stroke({ color: '#fff', width: 2 }),
-            }),
-            text: new OLText({
-              text: pos.vessel_name || pos.mmsi || getLocalizedText(structure.tables.vessels.uiName),
-              offsetY: -15,
-              font: '12px sans-serif',
-              fill: new Fill({ color: '#000' }),
-              stroke: new Stroke({ color: '#fff', width: 3 }),
-            }),
-          })
-        );
-
-        vesselMapMarkerSource?.addFeature(feature);
-      });
-  } catch (err) {
-    console.error('Error loading positions:', err);
-  }
+  refreshVesselMapMarkers();
+  
+  startPolling()
 }
 
-function openVesselMap(): void {
+function createMapIfNeeded(): void {
+  console.log("Creating map..")
+
   if (document.getElementById('map-container')) return;
 
   const container = document.createElement('div');
@@ -760,7 +723,7 @@ function openVesselMap(): void {
 
   recordsSection.insertBefore(container, viewTitle);
 
-  vesselMap = new Map({
+  vesselMap = new OLMap({
     target: 'map',
     layers: [new TileLayer({ source: new OSM() })],
     view: new View({ center: [0, 0], zoom: 2 }),
@@ -804,7 +767,126 @@ function openVesselMap(): void {
 
   mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
 
-  void refreshVesselMapMarkers();
+  showRegionOnMap(-57,-80,-20,-52);
+}
+
+function createVesselStyle(
+  position: LatestVesselPosition,
+): (feature: any, resolution: number) => Style {
+
+  return (_feature, _resolution) => {
+
+    const zoom = vesselMap?.getView().getZoom() ?? 0;
+
+    return new Style({
+
+      image: new CircleStyle({
+
+        radius: 8,
+
+        fill: new Fill({
+          color: "#3388ff",
+        }),
+
+        stroke: new Stroke({
+          color: "#fff",
+          width: 2,
+        }),
+
+      }),
+      text: zoom >= 7
+        ? new OLText({
+
+            text: position.vessel_name ?? "",
+
+            offsetY: -15,
+
+            font: "12px sans-serif",
+
+            fill: new Fill({
+              color: "#000",
+            }),
+
+            stroke: new Stroke({
+              color: "#fff",
+              width: 3,
+            }),
+
+          })
+        : undefined,
+    });
+  };
+}
+
+function createFeature(position: LatestVesselPosition): Feature<Point> {
+  const feature = new Feature(
+    new Point(
+      fromLonLat([
+        Number(position.longitude),
+        Number(position.latitude),
+      ]),
+    ),
+  );
+
+  feature.setId(position.mmsi);
+
+  feature.setStyle(createVesselStyle(position));
+
+  feature.set('vesselPosition', position);
+
+  return feature;
+}
+
+async function refreshVesselMapMarkers(): Promise<void> {
+  if (!vesselMapMarkerSource) return;
+
+  try {
+    const positions = await fetchLatestVesselPositions();
+
+    const alive = new Set<string>();
+
+    for (const position of positions) {
+      const mmsi = String(position.mmsi);
+
+      alive.add(mmsi);
+
+      let feature = vesselFeatures.get(mmsi);
+
+      if (!feature) {
+        feature = createFeature(position);
+
+        vesselFeatures.set(mmsi, feature);
+
+        vesselMapMarkerSource.addFeature(feature);
+      } else {
+        const geometry = feature.getGeometry() as Point;
+
+        geometry.setCoordinates(
+          fromLonLat([
+            Number(position.longitude),
+            Number(position.latitude),
+          ]),
+        );
+
+        feature.set('vesselPosition', position);
+        
+        feature.changed();
+      }
+    }
+
+    for (const [mmsi, feature] of vesselFeatures) {
+      if (!alive.has(mmsi)) {
+        vesselMapMarkerSource.removeFeature(feature);
+
+        vesselFeatures.delete(mmsi);
+      }
+    }
+  } catch (err) {
+    console.error('Failed refreshing vessels', err);
+  }
+}
+
+function startPolling() : void {
   vesselMapInterval = setInterval(refreshVesselMapMarkers, 10000);
 }
 
@@ -878,96 +960,10 @@ function toggleVesselOnMap(mmsi: string): void {
     mapVesselMmsis.add(mmsi);
   }
 
-  syncVesselMapButtons();
   void refreshVesselMapMarkers();
 }
 
-async function setAllPositionedVesselsOnMap(selected: boolean): Promise<void> {
-  try {
-    const positions = await fetchLatestVesselPositions();
-
-    positions.forEach((position) => {
-      const mmsi = String(position.mmsi);
-
-      if (!mmsi) return;
-
-      if (selected) {
-        mapVesselMmsis.add(mmsi);
-      } else {
-        mapVesselMmsis.delete(mmsi);
-      }
-    });
-
-    syncVesselMapButtons();
-    await refreshVesselMapMarkers();
-  } catch (err) {
-    console.error('Error toggling all positioned vessels:', err);
-  }
-}
-
-function areAllPositionedVesselsOnMap(): boolean {
-  return (
-    latestVesselPositions.length > 0 &&
-    latestVesselPositions.every((position) =>
-      mapVesselMmsis.has(String(position.mmsi))
-    )
-  );
-}
-
-function areAllPageVesselsOnMap(): boolean {
-  if (listedVesselMmsis.length === 0) return false;
-  return listedVesselMmsis.every((mmsi) => mapVesselMmsis.has(mmsi));
-}
-
-function setPageVesselsOnMap(selected: boolean): void {
-  listedVesselMmsis.forEach((mmsi) => {
-    if (selected) {
-      mapVesselMmsis.add(mmsi);
-    } else {
-      mapVesselMmsis.delete(mmsi);
-    }
-  });
-  syncVesselMapButtons();
-  void refreshVesselMapMarkers();
-}
-
-
-function renderVesselMapControls(): void {
-  if (!vesselMapControlsContainer) return;
-
-  vesselMapControlsContainer.innerHTML = '';
-  vesselMapControlsContainer.hidden = activeTableKey !== 'vessels';
-
-  if (activeTableKey !== 'vessels' || listedVesselMmsis.length === 0) return;
-
-  const allPositionedOnMap = areAllPositionedVesselsOnMap();
-  const toggleAllPagesBtn = document.createElement('button');
-  toggleAllPagesBtn.className = allPositionedOnMap ? 'delete-btn' : 'add-btn';
-  toggleAllPagesBtn.textContent = getLocalizedText(
-    allPositionedOnMap
-      ? structure.commonText.removeAllMapVessels
-      : structure.commonText.addAllMapVessels
-  );
-  toggleAllPagesBtn.addEventListener('click', () => {
-    void setAllPositionedVesselsOnMap(!allPositionedOnMap);
-  });
-
-  vesselMapControlsContainer.appendChild(toggleAllPagesBtn);
-
-  const allPageOnMap = areAllPageVesselsOnMap();
-  const togglePageBtn = document.createElement('button');
-  togglePageBtn.className = allPageOnMap ? 'delete-btn' : 'add-btn';
-  togglePageBtn.textContent = getLocalizedText(
-    allPageOnMap
-      ? structure.commonText.removePageMapVessels
-      : structure.commonText.addPageMapVessels
-  );
-  togglePageBtn.addEventListener('click', () => {
-    setPageVesselsOnMap(!allPageOnMap);
-  });
-  vesselMapControlsContainer.appendChild(togglePageBtn);
-}
-
+//Filters
 function serializeFilterValue(fieldName: string, entry: FilterEntry): string | null {
   const column = (structure.tables[activeTableKey] as TableStructure).columns[fieldName];
 
@@ -1149,7 +1145,7 @@ function showSection(section: TableKey, pushState = true): void {
     `${getLocalizedText(structure.commonText.add)} ${getLocalizedText(tableConfig.uiName)}`;
 
   addRecordBtn.style.display =
-    canWriteAcademic() && section !== 'vessels' ? 'inline-block' : 'none';
+    canWriteAcademic()? 'inline-block' : 'none';
 
   if (adminActions) {
     adminActions.hidden = currentUser?.role !== 'admin';
@@ -1331,36 +1327,6 @@ const rowBehaviour = {
       void showRegionOnMap(region.min_lat, region.min_lon, region.max_lat, region.max_lon);
     });
   },
-  vessels: <K extends TableKey> (row: HTMLTableRowElement, record: TableRecordMap[K] ) => {
-    const vessel = record as TableRecordMap['vessels']
-
-    listedVesselMmsis.push(vessel.mmsi)
-
-    row.style.cursor = 'pointer';
-    row.addEventListener('click', () => {
-      void zoomToVesselOnMap(vessel.mmsi);
-    });
-  }
-}
-
-const actionsBehaviour = {
-  vessels: <K extends TableKey>(actionsTd: HTMLTableCellElement, record: TableRecordMap[K])  => {
-    const vessel = record as TableRecordMap['vessels']
-    const vesselMmsi = vessel.mmsi
-
-    const mapToggleBtn = document.createElement('button');
-    const isOnMap = mapVesselMmsis.has(vesselMmsi);
-
-    mapToggleBtn.className = isOnMap ? 'delete-btn' : 'edit-btn';
-    mapToggleBtn.textContent = getVesselMapActionLabel(vesselMmsi);
-    mapToggleBtn.dataset.vesselMapMmsi = vesselMmsi;
-    mapToggleBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      toggleVesselOnMap(vesselMmsi);
-    });
-
-    actionsTd.appendChild(mapToggleBtn);
-  }
 }
 
 function renderAnyTable<K extends TableKey>(
@@ -1424,7 +1390,9 @@ function renderAnyTable<K extends TableKey>(
       keyof TableRecordMap[K] & string
     >;
 
-    if(tableStructure.rowBehaviour) rowBehaviour[tableKey](row, record)
+    if(tableStructure.rowBehaviour && tableKey in rowBehaviour) {
+      (rowBehaviour[tableKey as keyof typeof rowBehaviour] as any)(row, record);
+    }
 
     columnNames.forEach((name) => {
       const td = document.createElement('td');
@@ -1442,7 +1410,7 @@ function renderAnyTable<K extends TableKey>(
       );
 
       if (tableStructure.actionsSpecialBehaviour) {
-        actionsBehaviour[tableKey as keyof typeof actionsBehaviour](actionsTd, record)
+        
       } else {
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
@@ -1475,8 +1443,6 @@ function renderAnyTable<K extends TableKey>(
 
     tbody.appendChild(row);
   });
-
-  renderVesselMapControls()
 }
 
 async function loadTableData<K extends TableKey>(tableKey: K): Promise<void> {
