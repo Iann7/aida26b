@@ -186,7 +186,13 @@ async def connect_ais_stream(db_connection):
     try:
         async with websockets.connect("wss://stream.aisstream.io/v0/stream") as websocket:
             subscribe_message = {"APIKey": os.environ.get(FLEET_API_KEY_ENV), 
-                                 "BoundingBoxes": [[[-90,-180],[90,180]]]} 
+                                 "BoundingBoxes": [
+                                        [
+                                             [-57.0, -80.0],
+                                             [-20.0, -52.0]
+                                        ]
+                                   ]
+                                 } 
                                 # Required!
                                  #"FiltersShipMMSI": ["368207620", "367719770", "211476060"], # Optional!
                                  #"FilterMessageTypes": ["PositionReport"]} # Optional!

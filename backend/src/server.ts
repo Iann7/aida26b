@@ -8,7 +8,6 @@ import fs from 'fs';
 // Use global fetch (Node 18+) or a polyfill if available in the environment
 
 import * as auth from './auth';
-
 import { getHandler } from './routes/get';
 import { putHandler } from './routes/put';
 import { postHandler } from './routes/post';
@@ -501,6 +500,40 @@ async function createStudentWithUser(req: Request, res: express.Response) {
   }
 }
 
+// Obtener detalles de un buque por MMSI
+app.get(
+  '/api/vessels/:id/details',
+  requireAuth,
+  requirePasswordReady,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const crewResult = await pool.query(
+        `SELECT * FROM crew_members WHERE vessel_mmsi = $1 ORDER BY embarked_at DESC NULLS LAST`,
+        [id]
+      );
+
+      const packetsResult = await pool.query(
+        `SELECT * FROM packets WHERE vessel_mmsi = $1 ORDER BY received_at DESC NULLS LAST`,
+        [id]
+      );
+
+      return res.json({
+        relations: {
+          crew_members: crewResult.rows,
+          packets: packetsResult.rows,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        error: 'Internal server error',
+      });
+    }
+  }
+);
+
 // Obtener última posición de cada barco
 const latestPositionSelect = `
   SELECT DISTINCT ON (p.vessel_mmsi)
@@ -531,40 +564,6 @@ async function getLatestPositions(whereClause = '', params: unknown[] = []) {
 app.get('/api/positions/latest', requireAuth, requirePasswordReady, async (_req, res) => {
   try {
     const result = await getLatestPositions();
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/positions/:mmsi', requireAuth, requirePasswordReady, async (req, res) => {
-  try {
-    const result = await getLatestPositions(
-      'WHERE p.vessel_mmsi = $1',
-      [req.params.mmsi]
-    );
-
-    res.json(result.rows[0] ?? null);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/positions', requireAuth, requirePasswordReady, async (req, res) => {
-  try {
-    const mmsis = String(req.query.mmsis ?? '').split(',').filter(Boolean);
-
-    if (mmsis.length === 0) {
-      return res.json([]);
-    }
-
-    const result = await getLatestPositions(
-      'WHERE p.vessel_mmsi = ANY($1)',
-      [mmsis]
-    );
-
     res.json(result.rows);
   } catch (error) {
     console.error(error);

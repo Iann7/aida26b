@@ -58,6 +58,7 @@ type ColumnDef = {
   nullable?: boolean;
   derivable?: {originTable: string, sqlGenerationStatement: string};
   foreignKey?: ForeignKeyDef;
+  visible: boolean;
 }
 
 type TableStructure = {
@@ -68,7 +69,10 @@ type TableStructure = {
   addButtonLabel?: LocalizedText
   referencedTables?: string[],
   rowBehaviour: Boolean,
-  actionsSpecialBehaviour: Boolean
+  belongsTo?: {
+    table: string,
+    foreignKey: string
+  }
 }
 
 type menuStructure = {

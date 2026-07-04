@@ -15,100 +15,195 @@ function localizeText(text: LocalizedText): string {
 
 export const structure = {
   tables: {
-    vessels: {
+    interesting_vessels: {
       columns: {
-        mmsi: {
+        vessel_mmsi: {
           type: 'string',
           label: { es: 'MMSI', en: 'MMSI' },
           readonlyOnEdit: true,
           validator: { required: true },
+          visible: true,
         },
 
-        name: {
+        color: {
           type: 'string',
-          label: { es: 'Nombre', en: 'Name' },
-          validator: { nullable: true },
+          label: { es: 'Color', en: 'Color' },
+          input: 'text', // ver como cambiarlo por color picker
+          validator: { required: true },
+          visible: true,
         },
 
-        vessel_type: {
-          type: 'string',
-          label: { es: 'Tipo de Barco', en: 'Vessel Type' },
-          validator: { nullable: true },
-        },
-
-        flag_country: {
-          type: 'string',
-          label: { es: 'Bandera', en: 'Flag Country' },
-          validator: { nullable: true },
-        },
-
-        latest_latitude: {
+        priority: {
           type: 'number',
           input: 'number',
-          label: { es: 'Latitud', en: 'Latitude' },
-          editable: false,
+          label: { es: 'Prioridad', en: 'Priority' },
           validator: { nullable: true },
-          derivable: {
-            originTable: 'vessels',
-            sqlGenerationStatement:
-              '(SELECT p.latitude FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
-          },
+          visible: true,
         },
 
-        latest_longitude: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Longitud', en: 'Longitude' },
-          editable: false,
-          validator: { nullable: true },
-          derivable: {
-            originTable: 'vessels',
-            sqlGenerationStatement:
-              '(SELECT p.longitude FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
-          },
+        visible_on_map: {
+          type: 'boolean',
+          label: { es: 'Visible', en: 'Visible' },
+          validator: { required: true },
+          visible: true,
         },
 
-        latest_position_at: {
+        notes: {
           type: 'string',
-          label: { es: 'Última Posición', en: 'Last Position' },
-          editable: false,
+          input: 'textarea',
+          label: { es: 'Observaciones', en: 'Notes' },
           validator: { nullable: true },
-          derivable: {
-            originTable: 'vessels',
-            sqlGenerationStatement:
-              '(SELECT p.recorded_at FROM positions p WHERE p.vessel_mmsi = entityName.mmsi ORDER BY p.recorded_at DESC LIMIT 1)',
-          },
+          visible: true,
         },
 
-        length_m: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Largo (m)', en: 'Length (m)' },
-          validator: { nullable: true },
-        },
-
-        width_m: {
-          type: 'number',
-          input: 'number',
-          label: { es: 'Ancho (m)', en: 'Width (m)' },
-          validator: { nullable: true },
-        },
-
-        created_at: {
+        added_at: {
           type: 'string',
           input: 'date',
-          label: { es: 'Creado', en: 'Created At' },
+          editable: false,
+          label: { es: 'Agregado', en: 'Added At' },
           validator: { nullable: true },
+          visible: true,
         },
       },
-      pk: 'mmsi',
-      uiName: { es: 'Barco', en: 'Vessel' },
-      title: { es: 'Barcos', en: 'Vessels' },
-      addButtonLabel: { es: 'Agregar Barco', en: 'Add Vessel' },
-      rowBehaviour: true,
-      actionsSpecialBehaviour: true
+      pk: 'vessel_mmsi',
+      uiName: { es: 'Barco de Interés', en: 'Tracked Vessel' },
+      title: { es: 'Barcos de Interés', en: 'Tracked Vessels' },
+      addButtonLabel: {
+        es: 'Agregar Barco de Interés',
+        en: 'Add Tracked Vessel',
+      },
+      rowBehaviour: true
     } satisfies TableStructure,
+    crew_members: {
+      columns: {
+        id: {
+          type: 'string',
+          editable: false,
+          label: { es: 'ID', en: 'ID' },
+          visible: false,
+        },
 
+        vessel_mmsi: {
+          type: 'string',
+          label: { es: 'MMSI', en: 'Vessel MMSI' },
+          validator: { required: true },
+          visible: true,
+        },
+
+        first_name: {
+          type: 'string',
+          label: { es: 'Nombre', en: 'First Name' },
+          validator: { required: true },
+          visible: true,
+        },
+
+        last_name: {
+          type: 'string',
+          label: { es: 'Apellido', en: 'Last Name' },
+          validator: { required: true },
+          visible: true,
+        },
+
+        rank: {
+          type: 'string',
+          label: { es: 'Cargo', en: 'Rank' },
+          validator: { nullable: true },
+          visible: true,
+        },
+
+        nationality: {
+          type: 'string',
+          label: { es: 'Nacionalidad', en: 'Nationality' },
+          validator: { nullable: true },
+          visible: true,
+        },
+
+        embarked_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Embarcado', en: 'Embarked At' },
+          validator: { nullable: true },
+          visible: true,  
+        },
+
+        disembarked_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Desembarcado', en: 'Disembarked At' },
+          validator: { nullable: true },
+          visible: true,
+        },
+      },
+
+      pk: 'id',
+
+      uiName: { es: 'Tripulante', en: 'Crew Member' },
+      title: { es: 'Tripulación', en: 'Crew Members' },
+      addButtonLabel: {
+        es: 'Agregar Tripulante',
+        en: 'Add Crew Member',
+      },
+
+      rowBehaviour: true,
+      belongsTo: {
+        table: "interesting_vessels",
+        foreignKey: "vessel_mmsi",
+      }
+    } satisfies TableStructure,
+    packets: {
+      columns: {
+        id: {
+          type: 'string',
+          editable: false,
+          label: { es: 'ID', en: 'ID' },
+          visible: false,
+        },
+
+        vessel_mmsi: {
+          type: 'string',
+          label: { es: 'MMSI', en: 'Vessel MMSI' },
+          validator: { nullable: true },
+          visible: true,
+        },
+
+        packet_type: {
+          type: 'string',
+          label: { es: 'Tipo', en: 'Packet Type' },
+          validator: { required: true },
+          visible: true,
+        },
+
+        source: {
+          type: 'string',
+          label: { es: 'Origen', en: 'Source' },
+          validator: { nullable: true },
+          visible: true,  
+        },
+
+        received_at: {
+          type: 'string',
+          input: 'date',
+          editable: false,
+          label: { es: 'Recibido', en: 'Received At' },
+          validator: { nullable: true },
+          visible: true,
+        },
+      },
+
+      pk: 'id',
+
+      uiName: { es: 'Paquete AIS', en: 'AIS Packet' },
+      title: { es: 'Paquetes AIS', en: 'AIS Packets' },
+      addButtonLabel: {
+        es: 'Agregar Paquete',
+        en: 'Add Packet',
+      },
+      belongsTo: {
+        table: "interesting_vessels",
+        foreignKey: "vessel_mmsi",
+      },
+      rowBehaviour: true
+    } satisfies TableStructure,
     regions: {
       columns: {
         id: {
@@ -116,47 +211,55 @@ export const structure = {
           label: { es: 'ID', en: 'ID' },
           readonlyOnEdit: true,
           validator: { required: true },
+          visible: false,
         },
         name: {
           type: 'string',
           label: { es: 'Nombre', en: 'Name' },
           validator: { required: true },
+          visible: true,
         },
         description: {
           type: 'string',
           input: 'textarea',
           label: { es: 'Descripción', en: 'Description' },
           validator: { nullable: true },
+          visible: true,
         },
         min_lat: {
           type: 'number',
           input: 'number',
           label: { es: 'Lat Mín', en: 'Min Lat' },
           validator: { required: true },
+          visible: true,
         },
         max_lat: {
           type: 'number',
           input: 'number',
           label: { es: 'Lat Máx', en: 'Max Lat' },
           validator: { required: true },
+          visible: true,
         },
         min_lon: {
           type: 'number',
           input: 'number',
           label: { es: 'Lon Mín', en: 'Min Lon' },
           validator: { required: true },
+          visible: true,
         },
         max_lon: {
           type: 'number',
           input: 'number',
           label: { es: 'Lon Máx', en: 'Max Lon' },
           validator: { required: true },
+          visible: true,
         },
         created_at: {
           type: 'string',
           input: 'date',
           label: { es: 'Creado', en: 'Created At' },
           validator: { nullable: true },
+          visible: true,
         },
       },
       pk: 'id',
@@ -164,10 +267,8 @@ export const structure = {
       title: { es: 'Regiones', en: 'Regions' },
       addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
       rowBehaviour: true,
-      actionsSpecialBehaviour: false,
     } satisfies TableStructure,
   },
-
   menu: {
     map: {
       title: { es: 'Mapa', en: 'Map' },
