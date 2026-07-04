@@ -259,6 +259,67 @@ select:focus-visible {
     box-shadow: var(--focus-ring);
 }
 
+.vessel-info-panel {
+    position: absolute;
+    top: 0;
+    right: -420px;
+    width: min(420px, 100%);
+    height: 100%;
+    background: var(--surface);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.16);
+    transition: right 0.3s ease, background-color 0.3s ease;
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 22px;
+    border-left: 1px solid var(--border);
+}
+
+.vessel-info-panel.open {
+    right: 0;
+}
+
+.vessel-info-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+}
+
+.vessel-info-panel__close {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.vessel-info-panel__close:hover {
+    background: var(--nav-btn-hover-bg);
+}
+
+.vessel-info-panel table {
+    width: 100%;
+    margin: 0 0 18px;
+}
+
+.vessel-info-panel th,
+.vessel-info-panel td {
+    padding: 10px 12px;
+}
+
+.vessel-info-panel h3 {
+    margin: 22px 0 12px;
+}
+
+.vessel-info-panel p {
+    margin: 0 0 16px;
+    color: var(--text-muted);
+}
+
 .actions {
     display: flex;
     gap: 8px;
