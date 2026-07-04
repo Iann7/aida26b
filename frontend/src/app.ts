@@ -1435,7 +1435,7 @@ function renderAnyTable<K extends TableKey>(
 
   const headerRow = document.createElement('tr');
 
-  Object.entries(tableStructure.columns).forEach(([fieldName, column]) => {
+  Object.entries(tableStructure.columns).filter(([_, column]) => column.visible).forEach(([fieldName, column]) => {
     const th = document.createElement('th');
 
     th.textContent = getLocalizedText(column.label as LocalizedText | string) || fieldName;
@@ -1478,9 +1478,10 @@ function renderAnyTable<K extends TableKey>(
       : [tableStructure.pk];
 
     const row = document.createElement('tr');
-    const columnNames = Object.keys(tableStructure.columns) as Array<
-      keyof TableRecordMap[K] & string
-    >;
+    const columnNames = (Object.entries(tableStructure.columns)
+      .filter(([, column]) => column.visible !== false)
+      .map(([key]) => key)
+    ) as Array<keyof TableRecordMap[K] & string>;
 
     if(tableStructure.rowBehaviour && tableKey in rowBehaviour) {
       (rowBehaviour[tableKey as keyof typeof rowBehaviour] as any)(row, record);
