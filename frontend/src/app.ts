@@ -658,7 +658,7 @@ function createMapIfNeeded(): void {
     showVesselMapTooltip(position, event.pixel as [number, number]);
   });
 
-  vesselMap.on('click', (event) => {
+  vesselMap.on('click', async (event) => {
     const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
     const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
 
@@ -674,19 +674,8 @@ function createMapIfNeeded(): void {
       zoom: Math.max(vesselMap.getView().getZoom() ?? 2, 9),
       duration: 450,
     });
-  });
 
-  vesselMap.on("singleclick", (event) => {
-    const feature = vesselMap?.forEachFeatureAtPixel(
-        event.pixel,
-        feature => feature
-    );
-    
-    if (!feature) return;
-    
-    const position = feature.get("vesselPosition");
-    
-    loadVesselPanel(position.mmsi, position.vessel_name);
+    await loadVesselPanel(String(position.mmsi), position.vessel_name || null);
   });
 
   mapDiv.addEventListener('mouseleave', hideVesselMapTooltip);
@@ -954,7 +943,7 @@ function closeVesselInfoPanel() {
   panel.classList.remove('open');
 }
 
-async function loadVesselPanel(mmsi: string, vesselName: string): Promise<void> {
+async function loadVesselPanel(mmsi: string, vesselName: string | null): Promise<void> {
 
     const response = await apiFetch(`/vessels/${mmsi}/details`);
 
@@ -962,7 +951,7 @@ async function loadVesselPanel(mmsi: string, vesselName: string): Promise<void> 
 
     console.log("Vessel details:", data);
 
-    renderVesselPanel(data, vesselName);
+    renderVesselPanel(data, vesselName || '');
 
     openVesselInfoPanel();
 }
