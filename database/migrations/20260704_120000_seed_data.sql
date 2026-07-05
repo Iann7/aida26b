@@ -20,6 +20,12 @@ CASCADE;
 -- VESSELS
 ----------------------------------------------------
 
+-- NOTES: Estos barcos son semillas (dummy) para pruebas de la UI y del mapa.
+--  - '205128000' (Atlantic Explorer): barco principal usado en tests de tabla/panel.
+--  - '701000001' (Patagonia Surveyor): barco secundario para verificaciones de zoom/tooltip.
+-- Asegúrese de que la app use estos MMSI para localizar marcadores en el mapa durante pruebas.
+
+
 INSERT INTO vessels (
     mmsi,
     name,
@@ -45,7 +51,7 @@ VALUES
     95,
     18
 );
-
+ 
 ----------------------------------------------------
 -- CREW MEMBERS
 ----------------------------------------------------
@@ -80,6 +86,8 @@ VALUES
     'Luis',
     'Ramírez',
     'Chief Engineer',
+
+
     'Uruguay',
     '2026-07-03'
 ),
@@ -100,48 +108,62 @@ INSERT INTO packets (
     vessel_mmsi,
     packet_type,
     source,
-    received_at,
-    raw_payload
+    received_at
 )
 VALUES
 (
     '205128000',
     'PositionReport',
     'AISStream',
-    '2026-07-04T10:00:00Z',
-    '{
-        "latitude": -34.59,
-        "longitude": -58.38,
-        "speed": 12.5,
-        "heading": 75
-    }'
+    '2026-07-04T10:00:00Z'
 ),
 (
     '205128000',
     'PositionReport',
     'AISStream',
-    '2026-07-04T10:05:00Z',
-    '{
-        "latitude": -34.58,
-        "longitude": -58.36,
-        "speed": 12.8,
-        "heading": 78
-    }'
+    '2026-07-04T10:05:00Z'
 ),
 (
     '205128000',
     'StaticData',
     'AISStream',
-    '2026-07-04T10:10:00Z',
-    '{
-        "imo": 9876543,
-        "callsign": "ONAB"
-    }'
+    '2026-07-04T10:10:00Z'
 );
 
 ----------------------------------------------------
 -- POSITIONS
 ----------------------------------------------------
+
+----------------------------------------------------
+-- INTERESTING_VESSELS (markers)
+-- Notes: these entries create map markers with explicit colors
+-- so the frontend can be tested for color/highlight/visibility behavior.
+-- The `vessel_mmsi` must match one of the seeded `vessels` above.
+-- Colors are hex strings and `visible_on_map` controls whether they appear.
+
+INSERT INTO interesting_vessels (
+    vessel_mmsi,
+    color,
+    priority,
+    notes,
+    added_at
+)
+VALUES
+(
+    '205128000',
+    '#ff4444', -- rojo para pruebas (debe resaltar en la UI)
+    1,
+    'Marker rojo de prueba para Atlantic Explorer',
+    now()
+),
+(
+    '701000001',
+    '#44ff44', -- verde para pruebas
+    2,
+    'Marker verde de prueba para Patagonia Surveyor',
+    now()
+);
+
 
 INSERT INTO positions (
     vessel_mmsi,

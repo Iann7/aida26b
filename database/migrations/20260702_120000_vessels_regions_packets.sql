@@ -64,9 +64,7 @@ CREATE TABLE IF NOT EXISTS packets (
 
     source text,
 
-    received_at timestamptz NOT NULL DEFAULT now(),
-
-    raw_payload jsonb NOT NULL
+    received_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_packets_vessel
@@ -111,8 +109,6 @@ CREATE TABLE IF NOT EXISTS interesting_vessels (
     color varchar(7) NOT NULL DEFAULT '#1976D2',
 
     priority integer NOT NULL DEFAULT 1,
-
-    visible_on_map boolean NOT NULL DEFAULT true,
 
     notes text,
 
