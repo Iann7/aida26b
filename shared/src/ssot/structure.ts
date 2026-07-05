@@ -17,6 +17,12 @@ export const structure = {
   tables: {
     interesting_vessels: {
       columns: {
+        id: {
+          type: 'string',
+          editable: false,
+          label: { es: 'ID', en: 'ID' },
+          visible: false,
+        },
         vessel_mmsi: {
           type: 'string',
           label: { es: 'MMSI', en: 'MMSI' },
@@ -28,7 +34,7 @@ export const structure = {
         color: {
           type: 'string',
           label: { es: 'Color', en: 'Color' },
-          input: 'text', // ver como cambiarlo por color picker
+          input: 'color', // ver como cambiarlo por color picker
           validator: { required: true },
           visible: true,
         },
@@ -40,14 +46,6 @@ export const structure = {
           validator: { nullable: true },
           visible: true,
         },
-
-        visible_on_map: {
-          type: 'boolean',
-          label: { es: 'Visible', en: 'Visible' },
-          validator: { required: true },
-          visible: true,
-        },
-
         notes: {
           type: 'string',
           input: 'textarea',
@@ -55,7 +53,6 @@ export const structure = {
           validator: { nullable: true },
           visible: true,
         },
-
         added_at: {
           type: 'string',
           input: 'date',
@@ -152,7 +149,7 @@ export const structure = {
     } satisfies TableStructure,
     packets: {
       columns: {
-        id: {
+         id: {
           type: 'string',
           editable: false,
           label: { es: 'ID', en: 'ID' },
@@ -206,11 +203,10 @@ export const structure = {
     } satisfies TableStructure,
     regions: {
       columns: {
-        id: {
+         id: {
           type: 'string',
+          editable: false,
           label: { es: 'ID', en: 'ID' },
-          readonlyOnEdit: true,
-          validator: { required: true },
           visible: false,
         },
         name: {
@@ -270,11 +266,10 @@ export const structure = {
     } satisfies TableStructure,
     notes: {
       columns: {
-        id: {
+         id: {
           type: 'string',
+          editable: false,
           label: { es: 'ID', en: 'ID' },
-          readonlyOnEdit: true,
-          validator: { required: true },
           visible: false,
         },
         vessel_mmsi: {

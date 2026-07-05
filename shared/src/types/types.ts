@@ -48,7 +48,7 @@ type LocalizedText = Record<Language, string>;
 type ColumnDef = {
   type: MyTypeNames;
   label?: LocalizedText;
-  input?: 'text' | 'email' | 'date' | 'number' | 'textarea' | 'select';
+  input?: 'text' | 'email' | 'date' | 'number' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'password' | 'color';
   options?: Array<{ value: string; label: LocalizedText }>;
   editable?: boolean;
   required?: boolean;

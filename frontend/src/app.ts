@@ -555,6 +555,7 @@ let vesselMapControlsContainer: HTMLDivElement | null = null;
 let vesselMapTooltip: HTMLDivElement | null = null;
 
 const vesselFeatures = new Map<string, Feature<Point>>();
+let selectedVesselMmsi: string | null = null;
 
 type LatestVesselPosition = {
   latitude: string | number;
@@ -605,14 +606,13 @@ const vessels_labels: vessel_labels = {
   latest_position_at: { es: 'Última posición', en: 'Latest position' },
 }
 
-function openVesselMap(): void {
+async function openVesselMap(): Promise<void> {
   createMapIfNeeded();
 
   createVesselInfoPanel();
 
-  refreshVesselMapMarkers();
-  
-  startPolling()
+  await refreshVesselMapMarkers();
+  startPolling();
 }
 
 function createMapIfNeeded(): void {
@@ -764,52 +764,95 @@ function hideVesselMapTooltip(): void {
   }
 }
 
-function createVesselStyle(
-  position: LatestVesselPosition,
-): (feature: any, resolution: number) => Style {
+const DEFAULT_VESSEL_COLOR = '#3388ff';
+
+type VesselStyleOptions = {
+  color?: string;
+  selected?: boolean;
+  vesselName?: string;
+};
+
+function createVesselStyle({
+  color = DEFAULT_VESSEL_COLOR,
+  selected = false,
+  vesselName = '',
+}: VesselStyleOptions): (feature: any, resolution: number) => Style {
 
   return (_feature, _resolution) => {
-
     const zoom = vesselMap?.getView().getZoom() ?? 0;
+    const radius = selected ? 10 : 8;
+    const strokeWidth = selected ? 3 : 2;
+    const strokeColor = '#fff';
 
     return new Style({
-
       image: new CircleStyle({
-
-        radius: 8,
-
+        radius,
         fill: new Fill({
-          color: "#3388ff",
+          color,
         }),
-
         stroke: new Stroke({
-          color: "#fff",
-          width: 2,
+          color: strokeColor,
+          width: strokeWidth,
         }),
-
       }),
-      text: zoom >= 7
-        ? new OLText({
-
-            text: position.vessel_name ?? "",
-
-            offsetY: -15,
-
-            font: "12px sans-serif",
-
-            fill: new Fill({
-              color: "#000",
-            }),
-
-            stroke: new Stroke({
-              color: "#fff",
-              width: 3,
-            }),
-
-          })
-        : undefined,
+      text:
+        zoom >= 7
+          ? new OLText({
+              text: vesselName,
+              offsetY: -15,
+              font: '12px sans-serif',
+              fill: new Fill({
+                color: '#000',
+              }),
+              stroke: new Stroke({
+                color: '#fff',
+                width: 3,
+              }),
+            })
+          : undefined,
     });
   };
+}
+
+function applyVesselFeatureStyle(feature: Feature<Point>, color: string, selected: boolean): void {
+  const position = feature.get('vesselPosition') as LatestVesselPosition | undefined;
+  const vesselName = position?.vessel_name ?? '';
+  feature.setStyle(
+    createVesselStyle({
+      color,
+      selected,
+      vesselName,
+    }),
+  );
+}
+
+function highlightVesselFeature(mmsi: string, color: string): void {
+  selectedVesselMmsi = mmsi;
+
+  vesselFeatures.forEach((feature, vesselId) => {
+    const selected = vesselId === mmsi;
+    const featureColor = selected ? color : DEFAULT_VESSEL_COLOR;
+    feature.set('vesselColor', featureColor);
+    applyVesselFeatureStyle(feature, featureColor, selected);
+  });
+
+  if (!vesselMap) return;
+
+  const view = vesselMap.getView();
+  const selectedFeature = vesselFeatures.get(mmsi);
+  if (!selectedFeature) return;
+
+  const geometry = selectedFeature.getGeometry();
+  if (!geometry) return;
+
+  const coordinates = geometry.getCoordinates();
+  if (coordinates) {
+    view.animate({
+      center: coordinates,
+      zoom: 12,
+      duration: 500,
+    });
+  }
 }
 
 function createFeature(position: LatestVesselPosition): Feature<Point> {
@@ -824,7 +867,13 @@ function createFeature(position: LatestVesselPosition): Feature<Point> {
 
   feature.setId(position.mmsi);
 
-  feature.setStyle(createVesselStyle(position));
+  feature.setStyle(createVesselStyle({
+    vesselName: position.vessel_name ?? '',
+    color: DEFAULT_VESSEL_COLOR,
+    selected: false,
+  }));
+
+  feature.set('vesselColor', DEFAULT_VESSEL_COLOR);
 
   feature.set('vesselPosition', position);
 
@@ -863,7 +912,9 @@ async function refreshVesselMapMarkers(): Promise<void> {
         );
 
         feature.set('vesselPosition', position);
-        
+        const isSelected = selectedVesselMmsi === mmsi;
+        const featureColor = feature.get('vesselColor') ?? DEFAULT_VESSEL_COLOR;
+        applyVesselFeatureStyle(feature, featureColor, isSelected);
         feature.changed();
       }
     }
@@ -897,7 +948,7 @@ function closeVesselMap(): void {
 }
 
 async function showRegionOnMap(minLat:number,minLon:number,maxLat:number,maxLon:number): Promise<void> {
-  openVesselMap();
+  await openVesselMap();
   
   if (!vesselMap) return;
 
@@ -1408,6 +1459,15 @@ const rowBehaviour = {
       void showRegionOnMap(region.min_lat, region.min_lon, region.max_lat, region.max_lon);
     });
   },
+  interesting_vessels: <K extends TableKey>(row: HTMLTableRowElement, record: TableRecordMap[K]) => {
+    const vessel = record as TableRecordMap['interesting_vessels']
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => {
+      void openVesselMap().then(() => {
+        highlightVesselFeature(String(vessel.vessel_mmsi), vessel.color || DEFAULT_VESSEL_COLOR);
+      });
+    });
+  }
 }
 
 function renderAnyTable<K extends TableKey>(
@@ -1422,9 +1482,10 @@ function renderAnyTable<K extends TableKey>(
   thead.innerHTML = '';
   tbody.innerHTML = '';
 
+  const visibleColumns = Object.entries(tableStructure.columns).filter(([, column]) => column.visible);
   const headerRow = document.createElement('tr');
 
-  Object.entries(tableStructure.columns).filter(([_, column]) => column.visible).forEach(([fieldName, column]) => {
+  visibleColumns.forEach(([fieldName, column]) => {
     const th = document.createElement('th');
 
     th.textContent = getLocalizedText(column.label as LocalizedText | string) || fieldName;
@@ -1467,10 +1528,7 @@ function renderAnyTable<K extends TableKey>(
       : [tableStructure.pk];
 
     const row = document.createElement('tr');
-    const columnNames = (Object.entries(tableStructure.columns)
-      .filter(([, column]) => column.visible !== false)
-      .map(([key]) => key)
-    ) as Array<keyof TableRecordMap[K] & string>;
+    const columnNames = visibleColumns.map(([key]) => key) as Array<keyof TableRecordMap[K] & string>;
 
     if(tableStructure.rowBehaviour && tableKey in rowBehaviour) {
       (rowBehaviour[tableKey as keyof typeof rowBehaviour] as any)(row, record);
