@@ -32,6 +32,21 @@ CREATE TABLE IF NOT EXISTS regions (
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
+----------------------------------------------------
+-- NOTES
+----------------------------------------------------
+CREATE TABLE IF NOT EXISTS notes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    vessel_mmsi text NOT NULL
+        REFERENCES vessels(mmsi)
+        ON DELETE CASCADE,  
+
+    content text NOT NULL,
+    
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_regions_bbox
 ON regions(min_lat, max_lat, min_lon, max_lon);
 

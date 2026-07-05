@@ -268,6 +268,42 @@ export const structure = {
       addButtonLabel: { es: 'Agregar Región', en: 'Add Region' },
       rowBehaviour: true,
     } satisfies TableStructure,
+    notes: {
+      columns: {
+        id: {
+          type: 'string',
+          label: { es: 'ID', en: 'ID' },
+          readonlyOnEdit: true,
+          validator: { required: true },
+          visible: false,
+        },
+        vessel_mmsi: {
+          type: 'string',
+          label: { es: 'MMSI', en: 'Vessel MMSI' },
+          validator: { required: true },
+          visible: true,
+        },
+        content: {
+          type: 'string',
+          input: 'textarea',
+          label: { es: 'Contenido', en: 'Content' },
+          validator: { nullable: true },
+          visible: true,
+        },
+        created_at: {
+          type: 'string',
+          input: 'date',
+          label: { es: 'Creado', en: 'Created At' },
+          validator: { nullable: true },
+          visible: true,
+        },
+      },
+      pk: 'id',
+      uiName: { es: 'Nota', en: 'Note' },
+      title: { es: 'Notas', en: 'Notes' },
+      addButtonLabel: { es: 'Agregar Nota', en: 'Add Note' },
+      rowBehaviour: false,
+    } satisfies TableStructure,
   },
   menu: {
     map: {
