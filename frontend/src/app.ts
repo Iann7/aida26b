@@ -644,6 +644,16 @@ function createMapIfNeeded(): void {
   const markerLayer = new VectorLayer({ source: vesselMapMarkerSource });
   vesselMap.addLayer(markerLayer);
 
+  if (vesselMapMarkerSource) {
+    vesselFeatures.forEach((feature) => {
+      try {
+        vesselMapMarkerSource?.addFeature(feature);
+      } catch (err) {
+        console.warn('Failed reattaching vessel feature', err);
+      }
+    });
+  }
+
   vesselMap.on('pointermove', (event) => {
     const feature = vesselMap?.forEachFeatureAtPixel(event.pixel, (candidate) => candidate);
     const position = feature?.get('vesselPosition') as LatestVesselPosition | undefined;
