@@ -1,13 +1,12 @@
 -- Seed data
--- Ejecutar una única vez en desarrollo
-
 SET client_encoding = 'UTF8';
 
 ----------------------------------------------------
--- Limpiar datos existentes
+-- CLEAN
 ----------------------------------------------------
 
 TRUNCATE TABLE
+    notes,
     crew_members,
     interesting_vessels,
     positions,
@@ -19,12 +18,6 @@ CASCADE;
 ----------------------------------------------------
 -- VESSELS
 ----------------------------------------------------
-
--- NOTES: Estos barcos son semillas (dummy) para pruebas de la UI y del mapa.
---  - '205128000' (Atlantic Explorer): barco principal usado en tests de tabla/panel.
---  - '701000001' (Patagonia Surveyor): barco secundario para verificaciones de zoom/tooltip.
--- Asegúrese de que la app use estos MMSI para localizar marcadores en el mapa durante pruebas.
-
 
 INSERT INTO vessels (
     mmsi,
@@ -51,7 +44,7 @@ VALUES
     95,
     18
 );
- 
+
 ----------------------------------------------------
 -- CREW MEMBERS
 ----------------------------------------------------
@@ -61,7 +54,9 @@ INSERT INTO crew_members (
     first_name,
     last_name,
     rank,
+    age,
     nationality,
+    status,
     embarked_at
 )
 VALUES
@@ -69,35 +64,71 @@ VALUES
     '205128000',
     'Pedro',
     'López',
-    'Captain',
+    'captain',
+    54,
     'Argentina',
+    'On Board',
     '2026-07-01'
 ),
 (
     '205128000',
     'Ana',
     'Martínez',
-    'Chief Officer',
+    'chief_officer',
+    41,
     'Argentina',
+    'On Board',
     '2026-07-02'
 ),
 (
     '205128000',
     'Luis',
     'Ramírez',
-    'Chief Engineer',
-
-
+    'second_officer',
+    46,
     'Uruguay',
+    'On Board',
     '2026-07-03'
 ),
 (
-    '205128000',
+    '701000001',
     'María',
     'Suárez',
-    'Deck Officer',
+    'second_officer',
+    35,
     'Chile',
+    'Off Board',
     '2026-07-04'
+);
+
+----------------------------------------------------
+-- NOTES
+----------------------------------------------------
+
+INSERT INTO notes (
+    vessel_mmsi,
+    title,
+    category,
+    content
+)
+VALUES
+(
+    '205128000',
+    'Radar revisado',
+    'maintenance',
+    'Se realizó mantenimiento preventivo del radar principal.'
+),
+(
+    '205128000',
+    'Inspección anual',
+    'inspection',
+    'La inspección anual fue completada sin observaciones.'
+),
+(
+    '701000001',
+    'Condiciones climáticas',
+    'weather',
+    'Se esperan fuertes vientos en la próxima navegación.'
 );
 
 ----------------------------------------------------
@@ -106,64 +137,69 @@ VALUES
 
 INSERT INTO packets (
     vessel_mmsi,
+    packet_code,
     packet_type,
+    weight_kg,
+    company,
     source,
     received_at
 )
 VALUES
 (
     '205128000',
-    'PositionReport',
-    'AISStream',
+    'PKT-1001',
+    'Container',
+    4200,
+    'Maersk Logistics',
+    'Buenos Aires',
     '2026-07-04T10:00:00Z'
 ),
 (
     '205128000',
-    'PositionReport',
-    'AISStream',
+    'PKT-1002',
+    'Medical',
+    350,
+    'Mercy Cargo',
+    'Montevideo',
     '2026-07-04T10:05:00Z'
 ),
 (
-    '205128000',
-    'StaticData',
-    'AISStream',
+    '701000001',
+    'PKT-2001',
+    'Scientific',
+    180,
+    'National Research Institute',
+    'Ushuaia',
     '2026-07-04T10:10:00Z'
 );
 
 ----------------------------------------------------
--- POSITIONS
+-- INTERESTING VESSELS
 ----------------------------------------------------
-
-----------------------------------------------------
--- INTERESTING_VESSELS (markers)
--- Notes: these entries create map markers with explicit colors
--- so the frontend can be tested for color/highlight/visibility behavior.
--- The `vessel_mmsi` must match one of the seeded `vessels` above.
--- Colors are hex strings and `visible_on_map` controls whether they appear.
 
 INSERT INTO interesting_vessels (
     vessel_mmsi,
     color,
     priority,
-    notes,
-    added_at
+    notes
 )
 VALUES
 (
     '205128000',
-    '#ff4444', -- rojo para pruebas (debe resaltar en la UI)
+    '#ff4444',
     1,
-    'Marker rojo de prueba para Atlantic Explorer',
-    now()
+    'Barco monitoreado diariamente.'
 ),
 (
     '701000001',
-    '#44ff44', -- verde para pruebas
+    '#44aa44',
     2,
-    'Marker verde de prueba para Patagonia Surveyor',
-    now()
+    'Barco de investigación.'
 );
 
+----------------------------------------------------
+-- POSITIONS
+----------------------------------------------------
 
 INSERT INTO positions (
     vessel_mmsi,
