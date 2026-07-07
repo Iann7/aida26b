@@ -29,16 +29,15 @@ export const structure = {
           readonlyOnEdit: true,
           validator: { required: true },
           visible: true,
+          input: 'text'
         },
-
         color: {
           type: 'string',
           label: { es: 'Color', en: 'Color' },
-          input: 'color', // ver como cambiarlo por color picker
+          input: 'color',
           validator: { required: true },
           visible: true,
         },
-
         priority: {
           type: 'number',
           input: 'number',
@@ -49,12 +48,12 @@ export const structure = {
         notes: {
           type: 'string',
           input: 'textarea',
-          label: { es: 'Observaciones', en: 'Notes' },
+          label: { es: 'Observaciones', en: 'Observations' },
           validator: { nullable: true },
           visible: true,
         },
         added_at: {
-          type: 'string',
+          type: 'date',
           input: 'date',
           editable: false,
           label: { es: 'Agregado', en: 'Added At' },
@@ -79,12 +78,12 @@ export const structure = {
           label: { es: 'ID', en: 'ID' },
           visible: false,
         },
-
         vessel_mmsi: {
           type: 'string',
           label: { es: 'MMSI', en: 'Vessel MMSI' },
           validator: { required: true },
           visible: true,
+          input: 'text'
         },
 
         first_name: {
@@ -92,12 +91,14 @@ export const structure = {
           label: { es: 'Nombre', en: 'First Name' },
           validator: { required: true },
           visible: true,
+          input: 'text'
         },
 
         last_name: {
           type: 'string',
           label: { es: 'Apellido', en: 'Last Name' },
           validator: { required: true },
+          input: 'text',
           visible: true,
         },
 
@@ -106,6 +107,30 @@ export const structure = {
           label: { es: 'Cargo', en: 'Rank' },
           validator: { nullable: true },
           visible: true,
+          input: 'select',
+          options: [
+            {
+              value: "captain",
+              label: { es: "Capitán", en: "Captain" },
+            },
+            {
+              value: "chief_officer",
+              label: { es: "Primer Oficial", en: "Chief Officer" },
+            },
+            {
+              value: "second_officer",
+              label: { es: "Segundo Oficial", en: "Second Officer" },
+            },
+            {
+              value: "passanger",
+              label: { es: "Pasajero", en: "Passanger" },
+            },
+            {
+              value: "other",
+              label: { es: "Otro", en: "Other" },
+            },
+            
+          ]
         },
 
         nationality: {
@@ -113,10 +138,23 @@ export const structure = {
           label: { es: 'Nacionalidad', en: 'Nationality' },
           validator: { nullable: true },
           visible: true,
+          input: 'text'
+        },
+
+        status: {
+          type: "string",
+          label: { es: "Estado", en: "Status" },
+          validator: { nullable: true },
+          visible: true,
+          input: 'select',
+          options: [
+            {value: 'On Board', label:{es:'Embarcado', en:'On Board'} },
+            {value: 'Off Board', label: {es:'Desembarcado', en:'Off Board'}}
+          ]
         },
 
         embarked_at: {
-          type: 'string',
+          type: 'date',
           input: 'date',
           label: { es: 'Embarcado', en: 'Embarked At' },
           validator: { nullable: true },
@@ -124,7 +162,7 @@ export const structure = {
         },
 
         disembarked_at: {
-          type: 'string',
+          type: 'date',
           input: 'date',
           label: { es: 'Desembarcado', en: 'Disembarked At' },
           validator: { nullable: true },
@@ -163,11 +201,20 @@ export const structure = {
           visible: true,
         },
 
+        packet_code: {
+          type: "string",
+          label: { es: "Código", en: "Packet Code" },
+          validator: { required: true },
+          visible: true,
+          input:'text'
+        },
+
         packet_type: {
           type: 'string',
           label: { es: 'Tipo', en: 'Packet Type' },
           validator: { required: true },
           visible: true,
+          input:'text'
         },
 
         source: {
@@ -175,10 +222,25 @@ export const structure = {
           label: { es: 'Origen', en: 'Source' },
           validator: { nullable: true },
           visible: true,  
+          input: 'text'
         },
 
+        company: {
+          type: "string",
+          label: { es: "Empresa", en: "Company" },
+          validator: { nullable: true },
+          visible: true,
+        },
+
+        weight_kg: {
+          type: "number",
+          input: "number",
+          label: { es: "Peso (kg)", en: "Weight (kg)" },
+          validator: { nullable: true },
+          visible: true,
+        },
         received_at: {
-          type: 'string',
+          type: 'date',
           input: 'date',
           editable: false,
           label: { es: 'Recibido', en: 'Received At' },
@@ -214,6 +276,7 @@ export const structure = {
           label: { es: 'Nombre', en: 'Name' },
           validator: { required: true },
           visible: true,
+          input: 'text'
         },
         description: {
           type: 'string',
@@ -251,7 +314,7 @@ export const structure = {
           visible: true,
         },
         created_at: {
-          type: 'string',
+          type: 'date',
           input: 'date',
           label: { es: 'Creado', en: 'Created At' },
           validator: { nullable: true },
@@ -265,7 +328,7 @@ export const structure = {
       rowBehaviour: true,
     } satisfies TableStructure,
     notes: {
-      columns: {
+        columns: {
          id: {
           type: 'string',
           editable: false,
@@ -277,6 +340,43 @@ export const structure = {
           label: { es: 'MMSI', en: 'Vessel MMSI' },
           validator: { required: true },
           visible: true,
+          input: 'text'
+        },
+        title: {
+          type: "string",
+          label: { es: "Título", en: "Title" },
+          validator: { required: true },
+          visible: true,
+          input: 'text'
+        },
+        category: {
+          type: "string",
+          label: { es: "Categoría", en: "Category" },
+          validator: { nullable: true },
+          visible: true,
+          input: 'select',
+          options: [
+            {
+              value: "maintenance",
+              label: { es: "Mantenimiento", en: "Maintenance" },
+            },
+            {
+              value: "inspection",
+              label: { es: "Inspección", en: "Inspection" },
+            },
+            {
+              value: "security",
+              label: { es: "Seguridad", en: "Security" },
+            },
+            {
+              value: "navigation",
+              label: { es: "Navegación", en: "Navigation" },
+            },
+            {
+              value: "weather",
+              label: { es: "Clima", en: "Weather" },
+            },
+          ]
         },
         content: {
           type: 'string',

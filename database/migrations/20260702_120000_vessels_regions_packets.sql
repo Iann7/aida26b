@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS notes (
         REFERENCES vessels(mmsi)
         ON DELETE CASCADE,  
 
+    title text NOT NULL,
+
+    category text NOT NULL,
+
     content text NOT NULL,
     
     created_at timestamptz NOT NULL DEFAULT now()
@@ -60,7 +64,13 @@ CREATE TABLE IF NOT EXISTS packets (
         REFERENCES vessels(mmsi)
         ON DELETE CASCADE,
 
+    packet_code text UNIQUE,
+
     packet_type text NOT NULL,
+
+    weight_kg numeric,
+
+    company text,
 
     source text,
 
@@ -131,7 +141,11 @@ CREATE TABLE IF NOT EXISTS crew_members (
 
     rank text,
 
+    age integer,
+
     nationality text,
+
+    status text DEFAULT 'On Board',
 
     embarked_at date,
 
