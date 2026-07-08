@@ -519,10 +519,16 @@ app.get(
         [id]
       );
 
+      const notesResult = await pool.query(
+        `SELECT * FROM notes WHERE vessel_mmsi = $1 ORDER BY created_at DESC NULLS LAST`,
+        [id]
+      );
+
       return res.json({
         relations: {
           crew_members: crewResult.rows,
           packets: packetsResult.rows,
+          notes: notesResult.rows,
         },
       });
     } catch (err) {
