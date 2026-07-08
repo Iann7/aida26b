@@ -318,18 +318,26 @@ select:focus-visible {
     margin: 20px 0;
 }
 
-.vessel-info-panel table {
+.vessel-info-panel .panel-table-wrapper {
     width: 100%;
-    margin: 0 0 18px;
+    overflow-x: auto;
+    margin-bottom: 18px;
+}
+
+.vessel-info-panel table {
+    width: max-content;
+    min-width: 100%;
+    margin: 0;
     background-color: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 12px;
-    overflow: hidden;
+    border-collapse: collapse;
 }
 
 .vessel-info-panel th,
 .vessel-info-panel td {
     padding: 12px 14px;
+    white-space: nowrap;
 }
 
 .vessel-info-panel th {

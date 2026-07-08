@@ -1051,7 +1051,12 @@ function renderPanelTable(
         }
         tableElement.appendChild(tr);
     }
-    container.appendChild(tableElement);
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'panel-table-wrapper';
+    tableWrapper.appendChild(tableElement);
+
+    container.appendChild(tableWrapper);
 }
 
 function renderVesselPanel(data: VesselDetails, vesselName: string): void {
