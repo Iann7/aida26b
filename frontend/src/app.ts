@@ -1828,7 +1828,7 @@ function renderFilters<K extends TableKey>(tableKey: K): void {
   filterContainer.innerHTML = '';
 
   const tableStructure = structure.tables[tableKey];
-  const allColumns = Object.entries(tableStructure.columns);
+  const allColumns = Object.entries(tableStructure.columns).filter(([key, column]) => column.visible === true);
 
   const addBar = document.createElement('div');
   addBar.style.marginBottom = '10px';
