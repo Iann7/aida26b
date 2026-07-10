@@ -553,6 +553,8 @@ let vesselMapMarkerSource: VectorSource | null = null;
 let vesselMapInterval: ReturnType<typeof setInterval> | null = null;
 let vesselMapControlsContainer: HTMLDivElement | null = null;
 let vesselMapTooltip: HTMLDivElement | null = null;
+let currentPanelMmsi: string | null = null;
+let currentPanelVesselName: string | null = null;
 
 const vesselFeatures = new Map<string, Feature<Point>>();
 let selectedVesselMmsi: string | null = null;
@@ -1002,6 +1004,8 @@ function openVesselInfoPanel() {
 function closeVesselInfoPanel() {
   const panel = createVesselInfoPanel();
   panel.classList.remove('open');
+  currentPanelMmsi = null;
+  currentPanelVesselName = null;
 }
 
 async function loadVesselPanel(mmsi: string, vesselName: string | null): Promise<void> {
@@ -1013,6 +1017,8 @@ async function loadVesselPanel(mmsi: string, vesselName: string | null): Promise
     console.log("Vessel details:", data);
 
     renderVesselPanel(data, vesselName || '', mmsi);
+    currentPanelMmsi = mmsi;
+    currentPanelVesselName = vesselName || '';
 
     openVesselInfoPanel();
 }
@@ -1435,6 +1441,9 @@ function applyLanguageToUI(): void {
 
   if (currentUser && !currentUser.must_change_password) {
     showSection(activeTableKey, false);
+  }
+  if (currentPanelMmsi) {
+    void loadVesselPanel(currentPanelMmsi, currentPanelVesselName);
   }
 }
 
