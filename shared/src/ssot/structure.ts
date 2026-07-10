@@ -27,7 +27,11 @@ export const structure = {
           type: 'string',
           label: { es: 'MMSI', en: 'MMSI' },
           readonlyOnEdit: true,
-          validator: { required: true },
+          validator: { 
+            required: true,
+            maxLength:9,
+            minLength:9
+           },
           visible: true,
           input: 'text'
         },
@@ -42,14 +46,22 @@ export const structure = {
           type: 'number',
           input: 'number',
           label: { es: 'Prioridad', en: 'Priority' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxValue:5,
+            minValue:0,
+            integer:true
+           },
           visible: true,
         },
         notes: {
           type: 'string',
           input: 'textarea',
           label: { es: 'Observaciones', en: 'Observations' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxLength:100
+           },
           visible: true,
         },
         added_at: {
@@ -57,7 +69,10 @@ export const structure = {
           input: 'date',
           editable: false,
           label: { es: 'Agregado', en: 'Added At' },
-          validator: { nullable: true },
+          validator: { 
+          nullable: true,
+          maxDayOffset:0
+         },
           visible: true,
         },
       },
@@ -89,7 +104,11 @@ export const structure = {
         first_name: {
           type: 'string',
           label: { es: 'Nombre', en: 'First Name' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minLength:2,
+            maxLength:50
+           },
           visible: true,
           input: 'text'
         },
@@ -97,7 +116,11 @@ export const structure = {
         last_name: {
           type: 'string',
           label: { es: 'Apellido', en: 'Last Name' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minLength: 2,
+            maxLength: 50 
+           },
           input: 'text',
           visible: true,
         },
@@ -136,7 +159,13 @@ export const structure = {
         nationality: {
           type: 'string',
           label: { es: 'Nacionalidad', en: 'Nationality' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            minLength:1,
+            maxLength:100,
+            pattern:'^[A-Za-zÀ-ÿ\\s\\-\\.]+$',
+            patternMessage:'Solo letras,espacios,guiones o puntos.'
+          },
           visible: true,
           input: 'text'
         },
@@ -157,7 +186,10 @@ export const structure = {
           type: 'date',
           input: 'date',
           label: { es: 'Embarcado', en: 'Embarked At' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxDayOffset:0
+           },
           visible: true,  
         },
 
@@ -165,7 +197,10 @@ export const structure = {
           type: 'date',
           input: 'date',
           label: { es: 'Desembarcado', en: 'Disembarked At' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxDayOffset:0
+           },
           visible: true,
         },
       },
@@ -204,7 +239,12 @@ export const structure = {
         packet_code: {
           type: "string",
           label: { es: "Código", en: "Packet Code" },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            pattern:'^[0-9]+$',
+            minLength:4,
+            maxLength:20
+           },
           visible: true,
           input:'text'
         },
@@ -212,7 +252,14 @@ export const structure = {
         packet_type: {
           type: 'string',
           label: { es: 'Tipo', en: 'Packet Type' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            pattern:'[A-Za-z\\s]+$',
+            patternMessage:'solo letras y espacios',
+            minLength:1,
+            maxLength:200,
+            integer:false,
+           },
           visible: true,
           input:'text'
         },
@@ -220,7 +267,11 @@ export const structure = {
         source: {
           type: 'string',
           label: { es: 'Origen', en: 'Source' },
-          validator: { nullable: true },
+          validator: { 
+            required:true,
+            minLength:1,
+            maxLength:200
+          },
           visible: true,  
           input: 'text'
         },
@@ -228,7 +279,11 @@ export const structure = {
         company: {
           type: "string",
           label: { es: "Empresa", en: "Company" },
-          validator: { nullable: true },
+          validator: { 
+            required:true,
+            minLength:1,
+            maxLength:200
+          },
           visible: true,
         },
 
@@ -236,7 +291,10 @@ export const structure = {
           type: "number",
           input: "number",
           label: { es: "Peso (kg)", en: "Weight (kg)" },
-          validator: { nullable: true },
+          validator: { 
+            required:true,
+            minValue:0,
+           },
           visible: true,
         },
         received_at: {
@@ -244,7 +302,10 @@ export const structure = {
           input: 'date',
           editable: false,
           label: { es: 'Recibido', en: 'Received At' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxDayOffset:0
+           },
           visible: true,
         },
       },
@@ -282,42 +343,64 @@ export const structure = {
           type: 'string',
           input: 'textarea',
           label: { es: 'Descripción', en: 'Description' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            minLength:1,
+            maxLength:200,
+           },
           visible: true,
         },
         min_lat: {
           type: 'number',
           input: 'number',
           label: { es: 'Lat Mín', en: 'Min Lat' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minValue:-90,
+            maxValue:90
+           },
           visible: true,
         },
         max_lat: {
           type: 'number',
           input: 'number',
           label: { es: 'Lat Máx', en: 'Max Lat' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minValue:-90,
+            maxValue:90
+           },
           visible: true,
         },
         min_lon: {
           type: 'number',
           input: 'number',
           label: { es: 'Lon Mín', en: 'Min Lon' },
-          validator: { required: true },
+          validator: {
+            required: true,
+            minValue:-180,
+            maxValue:180
+          },
           visible: true,
         },
         max_lon: {
           type: 'number',
           input: 'number',
           label: { es: 'Lon Máx', en: 'Max Lon' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minValue:-180,
+            maxValue:180 },
           visible: true,
         },
         created_at: {
           type: 'date',
           input: 'date',
           label: { es: 'Creado', en: 'Created At' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxDayOffset:0
+           },
           visible: true,
         },
       },
@@ -338,14 +421,23 @@ export const structure = {
         vessel_mmsi: {
           type: 'string',
           label: { es: 'MMSI', en: 'Vessel MMSI' },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minLength:9,
+            maxLength:9,
+            pattern: '^[0-9]+$'
+           },
           visible: true,
           input: 'text'
         },
         title: {
           type: "string",
           label: { es: "Título", en: "Title" },
-          validator: { required: true },
+          validator: { 
+            required: true,
+            minLength:1,
+            maxLength:100
+           },
           visible: true,
           input: 'text'
         },
@@ -382,14 +474,21 @@ export const structure = {
           type: 'string',
           input: 'textarea',
           label: { es: 'Contenido', en: 'Content' },
-          validator: { nullable: true },
+          validator: {
+            required:true,
+            minLength:2,
+            maxLength:200
+           },
           visible: true,
         },
         created_at: {
           type: 'string',
           input: 'date',
           label: { es: 'Creado', en: 'Created At' },
-          validator: { nullable: true },
+          validator: { 
+            nullable: true,
+            maxDayOffset:0
+          },
           visible: true,
         },
       },
