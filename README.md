@@ -1,15 +1,18 @@
-# Sistema de Gestión Académica - Facultad de Ciencias Exactas UBA
+# Sistema de Gestión de Barcos y Monitoreo AIS
 
-Este proyecto implementa un sistema de gestión académica para la Facultad de Ciencias Exactas de la Universidad de Buenos Aires. El sistema permite gestionar alumnos, materias e inscripciones, con el objetivo de automatizar procesos académicos como la identificación de alumnos elegibles para títulos de grado y la generación de certificados.
+Este proyecto implementa un sistema de gestión y monitoreo de embarcaciones orientado al seguimiento geográfico, la administración operativa y la trazabilidad de paquetes AIS. El sistema permite gestionar barcos de interés por MMSI, administrar tripulación embarcada, controlar paquetes AIS, definir regiones de operación y registrar notas operativas asociadas a cada embarcación.
 
 ## Características
 
-- **Gestión de Alumnos**: CRUD completo con número de libreta como identificador único
-- **Gestión de Materias**: CRUD con código de materia como identificador
-- **Gestión de Inscripciones**: Relación muchos-a-muchos entre alumnos y materias con clave compuesta
-- **Interfaz Web**: Grillas interactivas con botones de agregar, editar y eliminar
-- **API REST**: Backend en Node.js con TypeScript
-- **Base de Datos**: PostgreSQL
+- **Monitoreo de Barcos de Interés**: CRUD para `interesting_vessels` con seguimiento por `vessel_mmsi`, prioridad, color y notas.
+- **Gestión de Tripulación**: CRUD para `crew_members`, con nombre, apellido, cargo, nacionalidad, estado de embarque y fechas de embarque/desembarque.
+- **Control de Paquetes AIS**: CRUD para `packets`, asociando paquetes a embarcaciones y registrando tipo, peso, origen y fecha de recepción.
+- **Definición de Regiones**: CRUD para `regions` con delimitaciones geográficas y zoom dinámico en el mapa.
+- **Bitácora de Notas**: CRUD para `notes` por embarcación, para eventos, incidencias y seguimiento operativo.
+- **Mapa Interactivo**: visualización geográfica con hover y clic para desplegar detalles de embarcaciones, tripulación y notas.
+- **API REST genérica**: Endpoints CRUD dinámicos generados a partir del modelo en `shared/src/ssot/structure.ts`.
+- **Backend y frontend desacoplados**: Node.js/TypeScript en backend y frontend en Vanilla TypeScript + HTML/CSS.
+- **Base de datos SQL**: PostgreSQL con migraciones versionadas y datos seed para prueba.
 
 ## Tecnologías Utilizadas
 
@@ -71,9 +74,9 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 
    **Para deshacer un cambio:** no se edita la migración original — se escribe
    una migración nueva que aplique el revert. Ej: si
-   `20260601_120000_add_phone.sql` hizo `ALTER TABLE students ADD COLUMN phone`,
-   para sacarla escribimos `20260602_090000_remove_phone.sql` con
-   `ALTER TABLE students DROP COLUMN phone`. Las migraciones aplicadas son
+   `20260601_120000_add_column.sql` hizo `ALTER TABLE interesting_vessels ADD COLUMN phone`,
+   para sacarla escribimos `20260602_090000_remove_column.sql` con
+   `ALTER TABLE interesting_vessels DROP COLUMN phone`. Las migraciones aplicadas son
    inmutables — modificarlas rompe la verificación de checksum.
 
 ### Backend
@@ -114,44 +117,45 @@ Este proyecto implementa un sistema de gestión académica para la Facultad de C
 
 1. Ejecutar el backend: `npm start` en la raíz o en el directorio backend (servirá en http://localhost:3000)
 2. Abrir el navegador en http://localhost:3000
-3. Navegar entre las secciones de Alumnos, Materias e Inscripciones
+3. Navegar entre las secciones de Barcos de Interés, Tripulación, Paquetes, Regiones y Notas
 4. Usar los botones "Agregar" para crear nuevos registros
 5. Usar los botones "Editar" y "Eliminar" en cada fila de las grillas
+6. Acceder al mapa interactivo para ubicar embarcaciones y regiones en tiempo real
 
 ## API Endpoints
 
-### Alumnos
+### Endpoints CRUD genéricos por tabla
 
-- `GET /api/students` - Listar todos los alumnos
-- `GET /api/students/:numero_libreta` - Obtener alumno específico
-- `POST /api/students` - Crear nuevo alumno
-- `PUT /api/students/:numero_libreta` - Actualizar alumno
-- `DELETE /api/students/:numero_libreta` - Eliminar alumno
+La API expone operaciones CRUD dinámicas sobre las tablas definidas en `shared/src/ssot/structure.ts` y en el esquema de datos.
 
-### Materias
+- `GET /api/:tableName` - Listar registros de una tabla
+- `POST /api/:tableName` - Crear un nuevo registro en una tabla
+- `PUT /api/:tableName` - Actualizar un registro existente en una tabla
+- `DELETE /api/:tableName` - Eliminar un registro de una tabla
 
-- `GET /api/subjects` - Listar todas las materias
-- `GET /api/subjects/:cod_mat` - Obtener materia específica
-- `POST /api/subjects` - Crear nueva materia
-- `PUT /api/subjects/:cod_mat` - Actualizar materia
-- `DELETE /api/subjects/:cod_mat` - Eliminar materia
+Tablas principales del modelo actual:
 
-### Inscripciones
+- `interesting_vessels` - Barcos de interés con MMSI, color, prioridad, notas y fecha de alta.
+- `crew_members` - Tripulación asignada a embarcaciones.
+- `packets` - Paquetes AIS asociados a barcos.
+- `regions` - Regiones geográficas delimitadas.
+- `notes` - Notas operativas por embarcación.
+- `vessels` - Datos de embarcaciones recolectados desde el scraper AIS.
+- `positions` - Historial de posiciones y coordenadas de embarcaciones.
 
-- `GET /api/enrollments` - Listar todas las inscripciones
-- `GET /api/enrollments/:numero_libreta/:cod_mat` - Obtener inscripción específica
-- `POST /api/enrollments` - Crear nueva inscripción
-- `PUT /api/enrollments/:numero_libreta/:cod_mat` - Actualizar inscripción
-- `DELETE /api/enrollments/:numero_libreta/:cod_mat` - Eliminar inscripción
+### Endpoints especializados
 
-## Desarrollo Futuro
+- `GET /api/positions/latest` - Obtener la última posición reportada de cada barco con datos de la embarcación.
+- `GET /api/vessels/:id/details` - Obtener detalles de una embarcación específica junto con su tripulación, paquetes y notas.
 
-- Implementar autenticación y autorización
-- Agregar validaciones más robustas
-- Implementar búsqueda y filtros
-- Generar reportes y estadísticas
-- Automatizar procesos de titulación
-- Generar certificados de alumno regular
+### Autenticación y seguridad
+
+El backend también incluye endpoints de autenticación para login y gestión de sesión:
+
+- `POST /api/auth/login` - Iniciar sesión.
+- `POST /api/auth/logout` - Cerrar sesión.
+- `GET /api/auth/me` - Obtener usuario autenticado.
+- `POST /api/auth/change-password` - Cambiar contraseña del usuario autenticado.
 
 ## Testing de Paginación (Frontend + TypeScript)
 
@@ -160,7 +164,7 @@ El UI muestra el estado como: `Página X de Y (Total: N)` y ofrece botones `Ante
 
 ### Prerrequisitos
 
-- Backend y base de datos corriendo (la suite crea y borra registros de `students` vía API)
+- Backend y base de datos corriendo (la suite crea y borra registros de las tablas del modelo vía API)
 - Frontend servido en el mismo host/puerto que el backend (por defecto `http://localhost:3000`)
 - Node.js 18+
 
@@ -193,3 +197,7 @@ Este proyecto es parte del sistema académico de la Facultad de Ciencias Exactas
 ## Licencia
 
 Este proyecto es propiedad de la Universidad de Buenos Aires - Facultad de Ciencias Exactas.
+
+## Mas informacion
+
+Leer la seccion de informe para analizar que cambios se aplicaron sobre la version orginal
