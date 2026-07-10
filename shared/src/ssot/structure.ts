@@ -101,9 +101,9 @@ export const structure = {
           label: { es: 'MMSI', en: 'Vessel MMSI' },
           validator: { required: true },
           visible: true,
-          input: 'text'
+          input: 'text',
+          readonlyOnEdit: true
         },
-
         first_name: {
           type: 'string',
           label: { es: 'Nombre', en: 'First Name' },
@@ -238,6 +238,7 @@ export const structure = {
           label: { es: 'MMSI', en: 'Vessel MMSI' },
           validator: { nullable: true },
           visible: true,
+          readonlyOnEdit: true
         },
 
         packet_code: {
@@ -434,7 +435,8 @@ export const structure = {
             pattern: '^[0-9]+$'
            },
           visible: true,
-          input: 'text'
+          input: 'text',
+          readonlyOnEdit: true,
         },
         title: {
           type: "string",
