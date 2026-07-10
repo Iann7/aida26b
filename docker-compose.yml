@@ -72,13 +72,14 @@ services:
       context: .
       dockerfile: fleet_scrapper/Dockerfile
     container_name: aida26_scraper
+    command: python -u fleet_scrapper.py
     environment:
       DB_HOST: database
       DB_PORT: 5432
       DB_NAME: faculty_management
       DB_USER: aida26_user
       DB_PASSWORD: CambiaEsta!
-      FLEET_API_KEY: ApiKey!
+      FLEET_API_KEY: ${FLEET_API_KEY}
     depends_on:
       database:
         condition: service_healthy

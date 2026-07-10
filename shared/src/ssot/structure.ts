@@ -22,6 +22,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
         vessel_mmsi: {
           type: 'string',
@@ -59,6 +60,7 @@ export const structure = {
           label: { es: 'Agregado', en: 'Added At' },
           validator: { nullable: true },
           visible: true,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
       },
       pk: 'vessel_mmsi',
