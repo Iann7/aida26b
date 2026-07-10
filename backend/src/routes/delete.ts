@@ -63,7 +63,7 @@ export async function deleteHandler(
   const queryResponse: Response = await tryQuery(pool, query, pkValues);
 
   if (!queryResponse.success) {
-    return sendErrorMessage(res, queryResponse.message);
+    return sendErrorMessage(res, queryResponse.message, queryResponse.statusCode ?? 500);
   }
 
   if (queryResponse.data?.rowCount === 0) {

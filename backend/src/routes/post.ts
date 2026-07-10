@@ -60,7 +60,7 @@ export async function postHandler(
   const queryResponse = await tryQuery(pool, query, valuesToInsert);
 
   if (!queryResponse.success) {
-    return sendErrorMessage(res, queryResponse.message);
+    return sendErrorMessage(res, queryResponse.message, queryResponse.statusCode ?? 500);
   }
 
   return sendSuccessOperationMessage(

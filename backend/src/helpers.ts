@@ -6,11 +6,28 @@ function getEntityName(table: TableKey): string {
   return String(structure.tables[table].uiName.en);
 }
 
+function isForeignKeyViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23503'
+  );
+}
+
 async function tryQuery(pool: Pool, queryStatement: string, queryArguments?: any): Promise<Response>{
   try {
     return {success: true , data: await pool.query(queryStatement, queryArguments), message: ''};
   } catch (error) {
     console.error(error);
+    if (isForeignKeyViolation(error)) {
+      return {
+        success: false,
+        data: error,
+        message: 'Foreign key constraint violation',
+        statusCode: 400,
+      };
+    }
     return {success: false, data: error, message: 'Internal server error'};
   }
 }

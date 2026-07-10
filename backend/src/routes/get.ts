@@ -422,7 +422,7 @@ async function getRowOfTable(
   );
 
   if (!responseQuery.success) {
-    return sendErrorMessage(res, responseQuery.message);
+    return sendErrorMessage(res, responseQuery.message, responseQuery.statusCode ?? 500);
   }
 
   if (responseQuery.data.rowCount === 0) {

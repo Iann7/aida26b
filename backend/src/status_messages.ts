@@ -1,8 +1,8 @@
 import express from 'express';
 
 /*Messages*/
-function sendErrorMessage(res: express.Response, responseMessage: string){
-  return res.status(500).json({success: false, data: undefined, message: responseMessage})
+function sendErrorMessage(res: express.Response, responseMessage: string, statusCode = 500){
+  return res.status(statusCode).json({success: false, data: undefined, message: responseMessage})
 }
 
 function sendSuccessOperationMessage(res: express.Response, entityName: string, data: any, operationDone: string, successCode: number){

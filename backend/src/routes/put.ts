@@ -96,7 +96,7 @@ export async function putHandler(
   ]);
 
   if (!result.success) {
-    return sendErrorMessage(res, result.message);
+    return sendErrorMessage(res, result.message, result.statusCode ?? 500);
   }
 
   if (result.data?.rowCount === 0) {
