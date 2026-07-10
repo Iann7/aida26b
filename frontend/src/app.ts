@@ -1012,7 +1012,7 @@ async function loadVesselPanel(mmsi: string, vesselName: string | null): Promise
 
     console.log("Vessel details:", data);
 
-    renderVesselPanel(data, vesselName || '');
+    renderVesselPanel(data, vesselName || '', mmsi);
 
     openVesselInfoPanel();
 }
@@ -1059,7 +1059,7 @@ function renderPanelTable(
     container.appendChild(tableWrapper);
 }
 
-function renderVesselPanel(data: VesselDetails, vesselName: string): void {
+function renderVesselPanel(data: VesselDetails, vesselName: string, mmsi: string): void {
   const panel = createVesselInfoPanel();
 
   panel.replaceChildren();
@@ -1069,6 +1069,12 @@ function renderVesselPanel(data: VesselDetails, vesselName: string): void {
 
   const title = document.createElement('h2');
   title.textContent = vesselName;
+
+
+  const mmsiEl = document.createElement('span');
+  mmsiEl.textContent = `MMSI: ${mmsi}`;
+  mmsiEl.style.cssText = 'display:block; font-size:0.85rem; color: var(--text-muted); margin-top:4px; user-select:text;';
+  header.appendChild(mmsiEl);
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
