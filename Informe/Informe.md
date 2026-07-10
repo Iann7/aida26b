@@ -68,3 +68,12 @@ Para la puesta en marcha del sistema y la verificación de las nuevas funcionali
 - Despliegue Modular e Independiente: En caso de requerir la ejecución de los módulos de forma aislada, la sección del scraper cuenta con su propio directorio dedicado. Dentro de este, se incluye un conjunto de instrucciones específicas y scripts para inicializar el servicio de recolección de datos de manera independiente al contenedor principal.
 
 - Modo de Prueba (Datos Semilla): Si no se desea configurar el scraper ni dependencias externas durante la evaluación, el sistema está preparado para funcionar de forma autónoma. Gracias a las migraciones mencionadas en la sección anterior, la base de datos incorpora datos semilla (seeders) con dos embarcaciones preconfiguradas. Esto permite validar de inmediato el comportamiento del mapa interactivo, así como la visualización y gestión de sus respectivas bitácoras de notas y listados de tripulación.
+
+## Recolección de datos 
+Para simular el flujo maritimo en nuestra logica de negocios decidimos utilizar una API gratuita llamada [aistream.io](https://aisstream.io/) la cual ofrece varios tipos de reportes a los que podiamos escuchar. Decidimos quedarnos con positionReport y staticReport (dos de los mensajes que se proveen) position report indica la velocidad y posicion actual del barco mientras que static report indica (en una ventana menos frecuente) las dimensiones del barco y su destino.
+
+### ¿Que es AIS?
+AIS (*Automatic Identification System*) es un sistema transmisión que informa la identificacion unica del barco,posición,curso y velocidad. Segun las reglas de la **Organizacion Internacional Maritima**, todo barco debe contar con un AIS a bordo.
+
+### ¿Donde se transmite esta información?
+El sistema AIS opera en freecuencias VHF, para poder accederlas se necesitan dispositivos satelitales o costeros que puedan escuchar esta frecuencia. AISStream escucha esta información y la hace publica a traves de su API 
