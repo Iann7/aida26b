@@ -22,6 +22,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
         vessel_mmsi: {
           type: 'string',
@@ -74,6 +75,7 @@ export const structure = {
           maxDayOffset:0
          },
           visible: true,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
       },
       pk: 'vessel_mmsi',
