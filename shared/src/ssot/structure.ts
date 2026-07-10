@@ -94,6 +94,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
         vessel_mmsi: {
           type: 'string',
@@ -229,6 +230,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
 
         vessel_mmsi: {
@@ -302,7 +304,7 @@ export const structure = {
         received_at: {
           type: 'date',
           input: 'date',
-          editable: false,
+          editable: true,
           label: { es: 'Recibido', en: 'Received At' },
           validator: { 
             nullable: true,
@@ -333,6 +335,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
         name: {
           type: 'string',
@@ -419,6 +422,7 @@ export const structure = {
           editable: false,
           label: { es: 'ID', en: 'ID' },
           visible: false,
+          derivable: { originTable: '', sqlGenerationStatement: '' } 
         },
         vessel_mmsi: {
           type: 'string',
