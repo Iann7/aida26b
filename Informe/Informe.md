@@ -1,26 +1,34 @@
 # Informe
+
 ## Lógica de Negocio
 Con el objetivo de expandir las capacidades del esquema preexistente, se diseñó e implementó un nuevo módulo de lógica de negocio orientado al monitoreo y posicionamiento geográfico de embarcaciones en las costas de Argentina y Chile.
 
 El propósito principal de esta extensión es optimizar la administración de la flota mediante las siguientes implementaciones:
 
-- Mapa Interactivo: Representación gráfica e interactiva basada en un mapa para mejorar la geolocalización y el seguimiento en tiempo real de los barcos. El componente cuenta con interacción hover (al posicionar el cursor sobre un barco se despliega una ventana de información sintética) y eventos de click, los cuales renderizan un panel lateral detallado con los tripulantes, paquetes y notas asociadas a la embarcación seleccionada.
+### Mapa Interactivo
+
+Representación gráfica e interactiva basada en un mapa para mejorar la geolocalización y el seguimiento en tiempo real de los barcos. El componente cuenta con interacción hover (al posicionar el cursor sobre un barco se despliega una ventana de información sintética) y eventos de click, los cuales renderizan un panel lateral detallado con los tripulantes, paquetes y notas asociadas a la embarcación seleccionada.
 
 ![Alt Text](/Informe/Images/mapa.png)
 
-- Módulo de Tripulantes: Sección dedicada a la gestión del personal a bordo. Permite listar, registrar y administrar información crítica como el nombre, la nacionalidad y el rango jerárquico dentro de cada embarcación.
+### Módulo de Tripulantes
+Sección dedicada a la gestión del personal a bordo. Permite listar, registrar y administrar información crítica como el nombre, la nacionalidad y el rango jerárquico dentro de cada embarcación.
 
 ![Alt Text](/Informe/Images/tripulacion.png)
 
-- Definición de Regiones: Herramienta para delimitar áreas geográficas de interés (zonas de pesca, rutas comerciales o sectores de control), facilitando su identificación visual sobre el mapa. Para optimizar la navegación, al seleccionar una fila específica dentro de la tabla de regiones, el mapa realizará un enfoque dinámico (pan & zoom) hacia el sector correspondiente.
+### Definición de Regiones
+
+Herramienta para delimitar áreas geográficas de interés (zonas de pesca, rutas comerciales o sectores de control), facilitando su identificación visual sobre el mapa. Para optimizar la navegación, al seleccionar una fila específica dentro de la tabla de regiones, el mapa realizará un enfoque dinámico (pan & zoom) hacia el sector correspondiente.
 
 ![Alt Text](/Informe/Images/regiones.png)
 
-- Bitácora de Notas: Sistema de anotaciones históricas por embarcación que funciona como un registro de eventos, novedades o incidencias, permitiendo mantener un seguimiento (trackeo) detallado de la actividad operativa y del historial del barco.
+### Bitácora de Notas: 
+Sistema de anotaciones históricas por embarcación que funciona como un registro de eventos, novedades o incidencias, permitiendo mantener un seguimiento (trackeo) detallado de la actividad operativa y del historial del barco.
 
 ![Alt Text](/Informe/Images/notas.png)
 
-- Barcos de Interés: Funcionalidad de marcadores personalizados que permite destacar embarcaciones específicas en el mapa mediante una diferenciación cromática (colores distintivos), agilizando su supervisión. Al interactuar con la fila correspondiente a un barco de interés, este se desplegará de forma focalizada en el mapa.
+### Barcos de Interés: 
+Funcionalidad de marcadores personalizados que permite destacar embarcaciones específicas en el mapa mediante una diferenciación cromática (colores distintivos), agilizando su supervisión. Al interactuar con la fila correspondiente a un barco de interés, este se desplegará de forma focalizada en el mapa.
 
 ![Alt Text](/Informe/Images/barcos-interes.png)
 
@@ -30,21 +38,28 @@ El propósito principal de esta extensión es optimizar la administración de la
 
 
 ## Cambios en el Sistema
-- Para cumplir con los requerimientos planteados, se realizaron modificaciones estructurales tanto en el núcleo de datos como en la interfaz de usuario:
-Modificaciones en el Modelo de Datos (structure.ts)
+Para cumplir con los requerimientos planteados, se realizaron modificaciones estructurales tanto en el núcleo de datos como en la interfaz de usuario:
+
+### Modificaciones en el Modelo de Datos (structure.ts)
 
 Se intervino el archivo de configuración estructural structure.ts para reflejar las nuevas entidades del dominio en el esquema de tablas del sistema:
-- Tabla vessels: Diseñada para identificar y almacenar los atributos de los barcos. Cabe destacar que esta entidad no posee una sección de visualización directa en el frontend, sino que actúa como un repositorio para los datos recopilados de forma automatizada por el scraper de embarcaciones.
-- Tabla posicion: misma nocion que para la tabla de embarcaciones, almacena el historial y las últimas coordenadas geográficas obtenidas de manera asincrónica a través del scraper.
-- Tablas de negocio complementarias: Se incorporaron las estructuras relacionales correspondientes a regiones, tripulantes, notas, paquetes y barcos_interes.
+#### Tabla vessels: 
+Diseñada para identificar y almacenar los atributos de los barcos. Cabe destacar que esta entidad no posee una sección de visualización directa en el frontend, sino que actúa como un repositorio para los datos recopilados de forma automatizada por el scraper de embarcaciones.
+#### Tabla posicion: 
+misma nocion que para la tabla de embarcaciones, almacena el historial y las últimas coordenadas geográficas obtenidas de manera asincrónica a través del scraper.
+#### Tablas de negocio complementarias: 
+Se incorporaron las estructuras relacionales correspondientes a regiones, tripulantes, notas, paquetes y barcos_interes.
 
-Extensiones en la configuración de structure.ts:
+### Extensiones en la configuración de structure.ts:
 
-- Comportamiento dinámico de filas: Con el fin de añadir funciones interactivas para las filas de ciertas tablas (como barcos_interes o regiones), se agregó un atributo booleano a su configuración en structure.ts. Este campo determina si las filas poseen o no un comportamiento asociado. Posteriormente, en el archivo app.ts, se definen los handlers específicos para la lógica de aquellos componentes que activen esta opción, garantizando un acoplamiento transparente y desacoplado.
+#### Comportamiento dinámico de filas: 
+Con el fin de añadir funciones interactivas para las filas de ciertas tablas (como barcos_interes o regiones), se agregó un atributo booleano a su configuración en structure.ts. Este campo determina si las filas poseen o no un comportamiento asociado. Posteriormente, en el archivo app.ts, se definen los handlers específicos para la lógica de aquellos componentes que activen esta opción, garantizando un acoplamiento transparente y desacoplado.
 
-- Atributo de visibilidad condicional: Se incorporó la propiedad visible dentro de la definición de los campos. Esto permite ocultar columnas específicas en la interfaz de usuario (frontend) sin restringir su disponibilidad en las capas internas del sistema. Esta propiedad impacta directamente en la definición de las peticiones HTTP POST, permitiendo omitir o filtrar dichos campos automáticamente al momento de generar nuevos elementos en el backend.
+#### Atributo de visibilidad condicional: 
+Se incorporó la propiedad visible dentro de la definición de los campos. Esto permite ocultar columnas específicas en la interfaz de usuario (frontend) sin restringir su disponibilidad en las capas internas del sistema. Esta propiedad impacta directamente en la definición de las peticiones HTTP POST, permitiendo omitir o filtrar dichos campos automáticamente al momento de generar nuevos elementos en el backend.
 
-- Impacto en el Kernel: Debido a la arquitectura dirigida por datos (data-driven architecture) del kernel de la aplicación, la actualización del archivo structure.ts automatizó por completo la generación de los endpoints de la API (operaciones CRUD), la renderización dinámica de las tablas en la interfaz y la creación de los filtros avanzados basados en las nuevas columnas. Esto optimizó los tiempos de desarrollo, concentrando el esfuerzo en la modelación estructural.
+#### Impacto en el Kernel: 
+Debido a la arquitectura dirigida por datos (data-driven architecture) del kernel de la aplicación, la actualización del archivo structure.ts automatizó por completo la generación de los endpoints de la API (operaciones CRUD), la renderización dinámica de las tablas en la interfaz y la creación de los filtros avanzados basados en las nuevas columnas. Esto optimizó los tiempos de desarrollo, concentrando el esfuerzo en la modelación estructural.
 
 ## Incorporación del Mapa y Navegación
 Para integrar el mapa interactivo en la experiencia de usuario, se extendió el menú principal del sistema. Se reutilizó la lógica de los componentes de navegación existentes —los cuales gestionaban previamente el cambio de tema estético y la selección de idioma—, logrando una incorporación limpia, modular y coherente con el diseño general de la aplicación.
@@ -76,4 +91,4 @@ Para simular el flujo maritimo en nuestra logica de negocios decidimos utilizar 
 AIS (*Automatic Identification System*) es un sistema transmisión que informa la identificacion unica del barco,posición,curso y velocidad. Segun las reglas de la **Organizacion Internacional Maritima**, todo barco debe contar con un AIS a bordo.
 
 ### ¿Donde se transmite esta información?
-El sistema AIS opera en freecuencias VHF, para poder accederlas se necesitan dispositivos satelitales o costeros que puedan escuchar esta frecuencia. AISStream escucha esta información y la hace publica a traves de su API 
+El sistema AIS opera en freecuencias VHF, para poder accederlas se necesitan dispositivos satelitales o costeros que puedan escuchar esta frecuencia. AISStream escucha esta información y la hace publica a traves de su API  
