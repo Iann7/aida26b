@@ -219,6 +219,27 @@ function showSuccessMessage(message: string): void {
   }
 }
 
+function isForeignKeyViolation(message:string){
+  return message.includes('Foreign key') 
+}
+
+function getFKError(message:string) : string {
+ let column = message.match(/violation\s+(.*)/)?.[1] || 'unknown'
+
+  const errors = {
+    vessel_mmsi: {
+        es:'Embarcacion no disponible',
+        en:'Vessel not available'
+    },
+    unknown: {
+        es:'Elemento no disponible',
+        en:'Element not available'
+    }
+  } as Record<string, LocalizedText>
+
+  return getLocalizedText(errors[column])
+}
+
 function showErrorMessage(message: string): void {
   const dialog = document.createElement('dialog');
   dialog.classList.add('dialogErrorMessage');
@@ -227,7 +248,7 @@ function showErrorMessage(message: string): void {
   dialogTitle.textContent = 'Error';
 
   const dialogMessage = document.createElement('p');
-  dialogMessage.textContent = message;
+  dialogMessage.textContent = isForeignKeyViolation(message)? getFKError(message) : message;
 
   const closeButton = document.createElement('button');
   closeButton.textContent = 'Aceptar';

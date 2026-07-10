@@ -1,6 +1,6 @@
 import type { TableKey, Response, ColumnDef, TableStructure }  from '../../shared/src/types/types';
 import      { structure } from '../../shared/src/ssot/structure';
-import type { Pool }      from 'pg';
+import type { DatabaseError, Pool }      from 'pg';
 
 function getEntityName(table: TableKey): string {
   return String(structure.tables[table].uiName.en);
@@ -21,10 +21,11 @@ async function tryQuery(pool: Pool, queryStatement: string, queryArguments?: any
   } catch (error) {
     console.error(error);
     if (isForeignKeyViolation(error)) {
+      const columnName = (error as DatabaseError).detail?.match(/\((.*?)\)/)?.[1] || 'Unknow column';
       return {
         success: false,
         data: error,
-        message: 'Foreign key constraint violation',
+        message: `Foreign key constraint violation ${columnName}`,
         statusCode: 400,
       };
     }
