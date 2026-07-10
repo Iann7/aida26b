@@ -94,4 +94,4 @@ AIS (*Automatic Identification System*) es un sistema transmisión que informa l
 El sistema AIS opera en freecuencias VHF, para poder accederlas se necesitan dispositivos satelitales o costeros que puedan escuchar esta frecuencia. AISStream escucha esta información y la hace publica a traves de su API  
 
 ### Llave de la API key 
-para correr nuestro el codigo de recoleccion de datos se necesita una llave API provista por [aistream.io](https://aisstream.io/). Esta llave será provista en en el README.md del proyecto
+para correr nuestro el codigo de recoleccion de datos se necesita una llave API provista por [aistream.io](https://aisstream.io/). Esta llave será provista como variable dentro de la parte de secrets/variables del respositorio.
