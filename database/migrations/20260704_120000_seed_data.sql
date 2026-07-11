@@ -147,7 +147,7 @@ INSERT INTO packets (
 VALUES
 (
     '205128000',
-    'PKT-1001',
+    '1001',
     'Container',
     4200,
     'Maersk Logistics',
@@ -156,7 +156,7 @@ VALUES
 ),
 (
     '205128000',
-    'PKT-1002',
+    '1002',
     'Medical',
     350,
     'Mercy Cargo',
@@ -165,7 +165,7 @@ VALUES
 ),
 (
     '701000001',
-    'PKT-2001',
+    '2001',
     'Scientific',
     180,
     'National Research Institute',

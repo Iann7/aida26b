@@ -147,9 +147,7 @@ CREATE TABLE IF NOT EXISTS crew_members (
 
     status text DEFAULT 'On Board',
 
-    embarked_at date,
-
-    disembarked_at date
+    embarked_at date
 );
 
 CREATE INDEX IF NOT EXISTS idx_crew_vessel

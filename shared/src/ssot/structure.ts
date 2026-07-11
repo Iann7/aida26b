@@ -195,17 +195,6 @@ export const structure = {
            },
           visible: true,  
         },
-
-        disembarked_at: {
-          type: 'date',
-          input: 'date',
-          label: { es: 'Desembarcado', en: 'Disembarked At' },
-          validator: { 
-            nullable: true,
-            maxDayOffset:0
-           },
-          visible: true,
-        },
       },
 
       pk: 'id',
@@ -309,7 +298,7 @@ export const structure = {
           label: { es: 'Recibido', en: 'Received At' },
           validator: { 
             nullable: true,
-            maxDayOffset:0
+            maxDayOffset:30
            },
           visible: true,
         },
