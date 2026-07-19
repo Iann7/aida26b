@@ -1,5 +1,11 @@
 # Informe
 
+Integrantes:
+- Ignacio Iannello 
+- Ignacio Bousoño
+- Valentino Pons
+- Gonzalo Lafuente
+
 ## Lógica de Negocio
 Con el objetivo de expandir las capacidades del esquema preexistente, se diseñó e implementó un nuevo módulo de lógica de negocio orientado al monitoreo y posicionamiento geográfico de embarcaciones en las costas de Argentina y Chile.
 
